@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<h2>Chat App</h2>
+
+<h3>Online Users</h3>
+<ul id="users"></ul>
+
+<h3>Messages</h3>
+<ul id="messages"></ul>
+
+<input id="to" placeholder="Send to (username)">
+<input id="msg" placeholder="Message">
+<button onclick="send()">Send</button>
+
+<br><br>
+
+<input type="file" id="file">
+<button onclick="upload()">Send File</button>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+const socket = io();
+const username = localStorage.getItem("username");
+
+socket.emit("login", username);
+
+// Show users
+socket.on("users", (users) => {
+    const ul = document.getElementById("users");
+    ul.innerHTML = "";
+    users.forEach(u => {
+        const li = document.createElement("li");
+        li.textContent = u;
+        ul.appendChild(li);
+    });
+});
+
+// Send message
+function send() {
+    socket.emit("private message", {
+        to: document.getElementById("to").value,
+        message: document.getElementById("msg").value
+    });
+}
+
+// Receive message
+socket.on("private message", (data) => {
+    alert("New message from " + data.from);
+    const li = document.createElement("li");
+    li.textContent = data.from + ": " + data.message;
+    document.getElementById("messages").appendChild(li);
+});
+
+// Upload file
+async function upload() {
+    const file = document.getElementById("file").files[0];
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const res = await fetch("/upload", {
+        method: "POST",
+        body: formData
+    });
+
+    const data = await res.json();
+
+    const url = "/uploads/" + data.file;
+
+    let msg = "";
+
+    if (file.type.startsWith("image")) {
+        msg = `<img src="${url}" width="100">`;
+    } else if (file.type.startsWith("audio")) {
+        msg = `<audio controls src="${url}"></audio>`;
+    }
+
+    const li = document.createElement("li");
+    li.innerHTML = msg;
+    document.getElementById("messages").appendChild(li);
+}
+</script>
+
+</body>
+</html>
