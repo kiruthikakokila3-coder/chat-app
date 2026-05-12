@@ -1,11 +1,11 @@
-<h2>Select Room</h2>
+<h2>Select Chat</h2>
 
 <button onclick="join('public')">Public</button>
 <button onclick="join('private')">Private</button>
 
 <script>
-function join(room){
-  localStorage.setItem("room", room);
+function join(r){
+  localStorage.setItem("room", r);
   location.href="chat.html";
 }
 </script>

@@ -1,115 +1,17 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Chat</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-  <div id="chat-box"></div>
-  <input id="msg" placeholder="Type a message...">
-  <button onclick="sendMessage()">Send</button>
-  <input type="file" id="fileInput" accept="image/*,audio/*">
-  <button onclick="sendFile()">📎</button>
-  <button id="recordBtn">🎤 Record</button>
-  <emoji-picker></emoji-picker>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <script src="/socket.io/socket.io.js"></script>
-  <script type="module">
-    import "https://cdn.jsdelivr.net/npm/emoji-picker-element@latest/index.js";
+<link rel="stylesheet" href="style.css">
 
-    const socket = io();
-    const username = localStorage.getItem("username");
-    const dp = localStorage.getItem("dp");
-    const room = localStorage.getItem("room");
+<div id="online"></div>
 
-    socket.emit("login", { username, dp });
-    socket.emit("joinRoom", room);
+<div id="chat"></div>
 
-    socket.on("message", (data) => {
-      const div = document.createElement("div");
-      div.innerHTML = `<img src="${data.dp}" class="dp"> <b>${data.user}</b>: ${data.text} <span>${data.time}</span>`;
-      div.id = "msg-" + data.id;
-      document.getElementById("chat-box").appendChild(div);
-      // mark as seen
-      socket.emit("seenMessage", { room, msgId: data.id });
-    });
+<div id="typing"></div>
 
-    socket.on("updateSeen", (msg) => {
-      const div = document.getElementById("msg-" + msg.id);
-      if (div) {
-        div.innerHTML += ` <span>✓✓ Seen by ${msg.seenBy.join(", ")}</span>`;
-      }
-    });
+<input id="msg" placeholder="Type message">
+<input type="file" id="file">
 
-    socket.on("deleteMessage", (msgId) => {
-      const div = document.getElementById("msg-" + msgId);
-      if (div) div.remove();
-    });
+<button onclick="send()">Send</button>
 
-    socket.on("userStatus", (data) => {
-      const div = document.createElement("div");
-      div.textContent = `${data.user} is ${data.status}`;
-      document.getElementById("chat-box").appendChild(div);
-    });
-
-    socket.on("notification", (msg) => {
-      const div = document.createElement("div");
-      div.textContent = msg;
-      document.getElementById("chat-box").appendChild(div);
-    });
-
-    socket.on("typing", (user) => {
-      console.log(user + " is typing...");
-    });
-
-    function sendMessage() {
-      const msg = document.getElementById("msg").value;
-      socket.emit("chatMessage", { room, msg });
-      document.getElementById("msg").value = "";
-    }
-
-    document.getElementById("msg").addEventListener("input", () => {
-      socket.emit("typing", room);
-    });
-
-    function sendFile() {
-      const file = document.getElementById("fileInput").files[0];
-      const formData = new FormData();
-      formData.append("file", file);
-
-      fetch("/upload", { method: "POST", body: formData })
-        .then(res => res.json())
-        .then(data => {
-          socket.emit("chatMessage", { room, msg: `<img src="${data.file}" style="max-width:200px">` });
-        });
-    }
-
-    let mediaRecorder;
-    let audioChunks = [];
-    document.getElementById("recordBtn").onclick = async () => {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      mediaRecorder = new MediaRecorder(stream);
-      mediaRecorder.start();
-
-      mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-      mediaRecorder.onstop = () => {
-        const blob = new Blob(audioChunks, { type: "audio/webm" });
-        const formData = new FormData();
-        formData.append("file", blob, "voice.webm");
-
-        fetch("/upload", { method: "POST", body: formData })
-          .then(res => res.json())
-          .then(data => {
-            socket.emit("chatMessage", { room, msg: `<audio controls src="${data.file}"></audio>` });
-          });
-      };
-
-      setTimeout(() => mediaRecorder.stop(), 5000);
-    };
-
-    document.querySelector("emoji-picker").addEventListener("emoji-click", event => {
-      document.getElementById("msg").value += event.detail.unicode;
-    });
-  </script>
-</body>
-</html>
+<script src="/socket.io/socket.io.js"></script>
+<script src="script.js"></script>
