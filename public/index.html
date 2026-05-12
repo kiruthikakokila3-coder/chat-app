@@ -1,18 +1,92 @@
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Chat Login</title>
 
-<input id="name" placeholder="Username">
-<input id="pass" type="password" placeholder="Password">
+  <!-- 📱 Mobile Fix -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<button onclick="go()">Enter</button>
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #0b141a;
+      font-family: Arial;
+      color: white;
+    }
 
-<script>
-function go(){
-  if(!name.value || !pass.value){
-    alert("Enter details");
-    return;
-  }
+    .box {
+      width: 90%;
+      max-width: 320px;
+      background: #202c33;
+      padding: 20px;
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
 
-  localStorage.setItem("user", name.value);
-  location.href="inbox.html";
-}
-</script>
+    h2 {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    input {
+      padding: 12px;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+    }
+
+    button {
+      padding: 12px;
+      background: #25d366;
+      border: none;
+      color: black;
+      font-size: 16px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #1ebe5d;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="box">
+    <h2>Login</h2>
+
+    <input id="username" placeholder="Enter Username">
+    <input id="password" type="password" placeholder="Enter Password">
+
+    <button onclick="go()">Enter</button>
+  </div>
+
+  <script>
+    function go() {
+
+      let name = document.getElementById("username").value;
+      let pass = document.getElementById("password").value;
+
+      if (name.trim() === "" || pass.trim() === "") {
+        alert("Enter details");
+        return;
+      }
+
+      // save user
+      localStorage.setItem("user", name);
+
+      // go next page
+      window.location.href = "inbox.html";
+    }
+  </script>
+
+</body>
+</html>
