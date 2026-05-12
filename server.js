@@ -8,41 +8,56 @@ const io = new Server(server);
 
 app.use(express.static("public"));
 
-let users = {}; // socket.id -> username
-let onlineUsers = {}; // username -> socket.id
+let users = {};
+let rooms = {}; // roomName -> { password, users[] }
 
 io.on("connection", (socket) => {
 
-  socket.on("join", (username) => {
-    users[socket.id] = username;
-    onlineUsers[username] = socket.id;
+  socket.on("joinRoom", ({ username, room, password }) => {
 
-    io.emit("onlineUsers", Object.keys(onlineUsers));
+    // create room
+    if (!rooms[room]) {
+      rooms[room] = { password, users: [] };
+    }
+
+    // check password
+    if (rooms[room].password && rooms[room].password !== password) {
+      socket.emit("wrongPassword");
+      return;
+    }
+
+    users[socket.id] = { username, room };
+    rooms[room].users.push(username);
+
+    socket.join(room);
+
+    io.to(room).emit("roomUsers", rooms[room].users);
   });
 
-  socket.on("privateMessage", ({ to, message, from }) => {
-    const target = onlineUsers[to];
-
-    if (target) {
-      io.to(target).emit("privateMessage", { message, from });
+  socket.on("message", (data) => {
+    const user = users[socket.id];
+    if (user) {
+      io.to(user.room).emit("message", data);
     }
   });
 
-  socket.on("typing", ({ to, from }) => {
-    const target = onlineUsers[to];
-
-    if (target) {
-      io.to(target).emit("typing", from);
+  socket.on("typing", (name) => {
+    const user = users[socket.id];
+    if (user) {
+      socket.to(user.room).emit("typing", name);
     }
   });
 
   socket.on("disconnect", () => {
-    const username = users[socket.id];
+    const user = users[socket.id];
+    if (!user) return;
+
+    rooms[user.room].users =
+      rooms[user.room].users.filter(u => u !== user.username);
+
+    io.to(user.room).emit("roomUsers", rooms[user.room].users);
 
     delete users[socket.id];
-    delete onlineUsers[username];
-
-    io.emit("onlineUsers", Object.keys(onlineUsers));
   });
 });
 

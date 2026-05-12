@@ -1,40 +1,28 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Chat</title>
-
-  <!-- MOBILE FIX -->
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <link rel="stylesheet" href="style.css">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-<div class="app">
+<div id="users"></div>
+<div id="messages"></div>
 
-  <div class="sidebar">
-    <h3>Users</h3>
-    <ul id="users"></ul>
-  </div>
+<p id="typing"></p>
 
-  <div class="chat">
+<input id="msg">
+<button onclick="send()">Send</button>
 
-    <div class="header">
-      <span id="chatWith">Select user</span>
-      <small id="typing"></small>
-    </div>
+<br><br>
 
-    <div id="messages"></div>
+<input type="file" id="img">
+<button onclick="sendImage()">Send Image</button>
 
-    <div class="inputBox">
-      <input id="message" placeholder="Type message..." />
-      <button onclick="sendMessage()">➤</button>
-    </div>
+<br><br>
 
-  </div>
-
-</div>
+<button onclick="record()">🎤 Voice</button>
 
 <script src="/socket.io/socket.io.js"></script>
 <script src="script.js"></script>

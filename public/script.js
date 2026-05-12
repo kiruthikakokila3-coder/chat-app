@@ -1,86 +1,91 @@
 const socket = io();
 
-const username = localStorage.getItem("username");
+const name = localStorage.getItem("username");
+const room = localStorage.getItem("room");
+const pass = localStorage.getItem("password");
+const dp = localStorage.getItem("dp");
 
-// redirect if no login
-if (!username) {
-  window.location.href = "index.html";
-}
+socket.emit("joinRoom", { username: name, room, password: pass });
 
-socket.emit("join", username);
-
-let selectedUser = "";
-
-const usersList = document.getElementById("users");
-const messagesDiv = document.getElementById("messages");
-const chatWith = document.getElementById("chatWith");
-
-// USERS LIST
-socket.on("onlineUsers", (users) => {
-  usersList.innerHTML = "";
-
-  users.forEach((user) => {
-    if (user !== username) {
-      const li = document.createElement("li");
-      li.innerText = user;
-
-      li.onclick = () => {
-        selectedUser = user;
-        chatWith.innerText = "Chat with " + user;
-        messagesDiv.innerHTML = "";
-      };
-
-      usersList.appendChild(li);
-    }
-  });
+socket.on("wrongPassword", () => {
+  alert("Wrong password");
+  window.location = "index.html";
 });
 
-// SEND
-function sendMessage() {
-  const input = document.getElementById("message");
-  const msg = input.value;
-
-  if (!selectedUser) {
-    alert("Select user");
-    return;
-  }
-
-  socket.emit("privateMessage", {
-    to: selectedUser,
-    message: msg,
-    from: username
-  });
-
-  addMessage("You", msg);
-  input.value = "";
-}
-
-// RECEIVE
-socket.on("privateMessage", ({ message, from }) => {
-  addMessage(from, message);
+socket.on("roomUsers", (users) => {
+  document.getElementById("users").innerText = "Users: " + users.join(", ");
 });
 
-// ADD MESSAGE UI
-function addMessage(sender, msg) {
+function send() {
+  const msg = document.getElementById("msg").value;
+
+  socket.emit("message", {
+    name,
+    msg,
+    dp
+  });
+}
+
+socket.on("message", (data) => {
   const div = document.createElement("div");
 
-  div.className = sender === "You" ? "me" : "other";
-  div.innerHTML = `<b>${sender}</b><br>${msg}`;
+  div.innerHTML = `
+    <img src="${data.dp}" width="30">
+    <b>${data.name}</b>: ${data.msg}
+  `;
 
-  messagesDiv.appendChild(div);
-
-  messagesDiv.scrollTop = messagesDiv.scrollHeight;
-}
-
-// TYPING
-document.getElementById("message").addEventListener("input", () => {
-  if (selectedUser) {
-    socket.emit("typing", { to: selectedUser, from: username });
-  }
+  document.getElementById("messages").appendChild(div);
 });
 
-socket.on("typing", (user) => {
-  document.getElementById("typing").innerText = user + " typing...";
+// IMAGE
+function sendImage() {
+  const file = document.getElementById("img").files[0];
+
+  const reader = new FileReader();
+  reader.onload = function() {
+    socket.emit("message", {
+      name,
+      msg: `<img src="${reader.result}" width="100">`,
+      dp
+    });
+  };
+
+  reader.readAsDataURL(file);
+}
+
+// VOICE
+function record() {
+  navigator.mediaDevices.getUserMedia({ audio: true })
+    .then(stream => {
+      const mediaRecorder = new MediaRecorder(stream);
+      let chunks = [];
+
+      mediaRecorder.ondataavailable = e => chunks.push(e.data);
+
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(chunks);
+        const url = URL.createObjectURL(blob);
+
+        socket.emit("message", {
+          name,
+          msg: `<audio controls src="${url}"></audio>`,
+          dp
+        });
+      };
+
+      mediaRecorder.start();
+
+      setTimeout(() => mediaRecorder.stop(), 3000);
+    });
+}
+
+// typing
+document.getElementById("msg").addEventListener("input", () => {
+  socket.emit("typing", name);
+});
+
+socket.on("typing", (n) => {
+  document.getElementById("typing").innerText = n + " typing...";
 
   setTimeout(() => {
     document.getElementById("typing").innerText = "";

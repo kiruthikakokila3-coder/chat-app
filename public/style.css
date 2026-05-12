@@ -1,96 +1,9 @@
 body {
-  margin: 0;
   font-family: Arial;
 }
 
-.app {
-  display: flex;
-  height: 100vh;
-}
-
-/* SIDEBAR */
-.sidebar {
-  width: 30%;
-  background: #075e54;
-  color: white;
-  padding: 10px;
-  overflow-y: auto;
-}
-
-.sidebar li {
-  list-style: none;
-  padding: 10px;
-  background: #128c7e;
-  margin: 5px 0;
-  cursor: pointer;
-}
-
-/* CHAT */
-.chat {
-  width: 70%;
-  display: flex;
-  flex-direction: column;
-}
-
-/* HEADER */
-.header {
-  background: #075e54;
-  color: white;
-  padding: 10px;
-}
-
-/* MESSAGES */
 #messages {
-  flex: 1;
-  overflow-y: auto;
-  padding: 10px;
-  background: #ece5dd;
-}
-
-/* MESSAGE STYLE */
-.me {
-  background: #dcf8c6;
-  padding: 8px;
-  margin: 5px;
-  border-radius: 10px;
-  text-align: right;
-}
-
-.other {
-  background: white;
-  padding: 8px;
-  margin: 5px;
-  border-radius: 10px;
-}
-
-/* INPUT */
-.inputBox {
-  display: flex;
-  border-top: 1px solid #ccc;
-}
-
-.inputBox input {
-  flex: 1;
-  padding: 12px;
-  border: none;
-  font-size: 16px; /* prevent zoom */
-}
-
-.inputBox button {
-  width: 60px;
-  border: none;
-  background: #075e54;
-  color: white;
-  font-size: 18px;
-}
-
-/* MOBILE FIX */
-@media (max-width: 600px) {
-  .sidebar {
-    width: 35%;
-  }
-
-  .chat {
-    width: 65%;
-  }
+  height: 300px;
+  overflow-y: scroll;
+  background: #eee;
 }

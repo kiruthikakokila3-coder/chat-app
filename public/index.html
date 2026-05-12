@@ -1,67 +1,47 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Login</title>
-
-  <!-- MOBILE FIX -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <style>
-    body {
-      font-family: Arial;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-      background: #ece5dd;
-    }
-
-    .box {
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      text-align: center;
-      width: 90%;
-      max-width: 300px;
-    }
-
-    input {
-      width: 100%;
-      padding: 10px;
-      margin-top: 10px;
-    }
-
-    button {
-      margin-top: 10px;
-      padding: 10px;
-      width: 100%;
-      background: #075e54;
-      color: white;
-      border: none;
-    }
-  </style>
+  <title>Join</title>
 </head>
 
 <body>
 
-<div class="box">
-  <h2>Enter Name</h2>
-  <input id="username" placeholder="Your name" />
-  <button onclick="join()">Join Chat</button>
-</div>
+<h2>Join Chat</h2>
+
+<input id="name" placeholder="Name"><br><br>
+<input id="room" placeholder="Room"><br><br>
+<input id="pass" placeholder="Password (optional)"><br><br>
+
+<input type="file" id="dp"><br><br>
+
+<button onclick="join()">Join</button>
 
 <script>
 function join() {
-  const name = document.getElementById("username").value;
+  const name = document.getElementById("name").value;
+  const room = document.getElementById("room").value;
+  const pass = document.getElementById("pass").value;
 
-  if (!name) {
-    alert("Enter name");
-    return;
+  const file = document.getElementById("dp").files[0];
+
+  let reader = new FileReader();
+
+  reader.onload = function() {
+    localStorage.setItem("username", name);
+    localStorage.setItem("room", room);
+    localStorage.setItem("password", pass);
+    localStorage.setItem("dp", reader.result);
+
+    window.location = "chat.html";
+  };
+
+  if (file) {
+    reader.readAsDataURL(file);
+  } else {
+    localStorage.setItem("dp", "");
+    reader.onload();
   }
-
-  localStorage.setItem("username", name);
-  window.location.href = "chat.html";
 }
 </script>
 
