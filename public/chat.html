@@ -2,33 +2,31 @@
 <html>
 <head>
   <title>Chat</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
   <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
 
-<div id="loginBox">
-  <h3>Join Chat</h3>
-  <input id="name" placeholder="Your Name"><br><br>
-  <input id="pass" placeholder="Password"><br><br>
-  <button onclick="join()">Join</button>
-</div>
+<div class="container">
 
-<div id="chatUI" style="display:none;">
-
-  <div class="header">
-    <span id="title"></span><br>
-    <span id="onlineUsers"></span>
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <h3>Users</h3>
+    <ul id="users"></ul>
   </div>
 
-  <div id="chat"></div>
-  <div id="typing"></div>
+  <!-- Chat Area -->
+  <div class="chat">
+    <div class="header">
+      <h3 id="chatWith">Select user</h3>
+      <p id="typing"></p>
+    </div>
 
-  <div class="input-box">
-    <input id="msg" placeholder="Type message..." oninput="typingEvent()">
-    <button onclick="send()">➤</button>
+    <div id="messages"></div>
+
+    <div class="inputBox">
+      <input id="message" placeholder="Type message..." />
+      <button onclick="sendMessage()">➤</button>
+    </div>
   </div>
 
 </div>

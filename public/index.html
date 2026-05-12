@@ -1,22 +1,20 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Chat App</title>
+  <title>Login</title>
 </head>
 <body>
 
-<h2>🔥 Chat App</h2>
+<h2>Enter Username</h2>
 
-<button onclick="goPrivate()">Private Chat</button>
-<button onclick="goPublic()">Group Chat</button>
+<input id="username" placeholder="Enter name" />
+<button onclick="join()">Join</button>
 
 <script>
-function goPrivate() {
-  window.location.href = "chat.html?type=private";
-}
-
-function goPublic() {
-  window.location.href = "chat.html?type=public";
+function join() {
+  const name = document.getElementById("username").value;
+  localStorage.setItem("username", name);
+  window.location.href = "chat.html";
 }
 </script>
 

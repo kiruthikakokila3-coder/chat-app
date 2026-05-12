@@ -1,84 +1,79 @@
 const socket = io();
 
-const params = new URLSearchParams(window.location.search);
-const type = params.get("type") || "public";
+const username = localStorage.getItem("username");
+socket.emit("join", username);
 
-let username = "";
-let room = type + "-room";
+let selectedUser = "";
 
-document.getElementById("title").innerText =
-  type.toUpperCase() + " CHAT";
+const usersList = document.getElementById("users");
+const messagesDiv = document.getElementById("messages");
+const chatWith = document.getElementById("chatWith");
 
-// JOIN
-function join() {
-  username = document.getElementById("name").value;
-  const pass = document.getElementById("pass").value;
+// ONLINE USERS
+socket.on("onlineUsers", (users) => {
+  usersList.innerHTML = "";
 
-  if (!username || !pass) {
-    alert("Enter name & password");
+  users.forEach((user) => {
+    if (user !== username) {
+      const li = document.createElement("li");
+      li.innerText = user;
+      li.onclick = () => selectUser(user);
+      usersList.appendChild(li);
+    }
+  });
+});
+
+// SELECT USER
+function selectUser(user) {
+  selectedUser = user;
+  chatWith.innerText = "Chat with " + user;
+  messagesDiv.innerHTML = "";
+}
+
+// SEND MESSAGE
+function sendMessage() {
+  const input = document.getElementById("message");
+  const message = input.value;
+
+  if (!selectedUser) {
+    alert("Select user first");
     return;
   }
 
-  socket.emit("join_secure_room", {
-    type,
-    password: pass,
-    username
-  });
-}
-
-// ACCESS
-socket.on("access_granted", () => {
-  document.getElementById("loginBox").style.display = "none";
-  document.getElementById("chatUI").style.display = "block";
-});
-
-socket.on("access_denied", () => {
-  alert("Wrong password ❌");
-});
-
-// SEND
-function send() {
-  const msg = document.getElementById("msg").value;
-  if (!msg) return;
-
-  socket.emit("room_message", {
-    room,
-    message: msg,
-    from: username
+  socket.emit("privateMessage", {
+    to: selectedUser,
+    message,
+    from: username,
   });
 
-  document.getElementById("msg").value = "";
+  addMessage("You", message);
+  input.value = "";
 }
 
-// RECEIVE
-socket.on("room_message", (data) => {
-  const chat = document.getElementById("chat");
+// RECEIVE MESSAGE
+socket.on("privateMessage", ({ message, from }) => {
+  addMessage(from, message);
+});
 
+// ADD MESSAGE UI
+function addMessage(sender, msg) {
   const div = document.createElement("div");
-  div.className = "msg " + (data.from === username ? "me" : "");
-  div.innerHTML = `<b>${data.from}</b>: ${data.message}`;
-
-  chat.appendChild(div);
-  chat.scrollTop = chat.scrollHeight;
-});
+  div.className = sender === "You" ? "me" : "other";
+  div.innerHTML = `<b>${sender}:</b> ${msg}`;
+  messagesDiv.appendChild(div);
+}
 
 // TYPING
-function typingEvent() {
-  socket.emit("typing", { user: username, room });
-}
-
-socket.on("typing", (data) => {
-  const typing = document.getElementById("typing");
-
-  typing.innerText = data.user + " is typing...";
-
-  setTimeout(() => {
-    typing.innerText = "";
-  }, 1000);
+document.getElementById("message").addEventListener("input", () => {
+  if (selectedUser) {
+    socket.emit("typing", { to: selectedUser, from: username });
+  }
 });
 
-// ONLINE USERS
-socket.on("online_users", (users) => {
-  document.getElementById("onlineUsers").innerText =
-    "Online: " + users.join(", ");
+socket.on("typing", (user) => {
+  document.getElementById("typing").innerText = user + " typing...";
+
+  setTimeout(() => {
+    document.getElementById("typing").innerText = "";
+  }, 1000);
 });

@@ -8,61 +8,48 @@ const io = new Server(server);
 
 app.use(express.static("public"));
 
-let users = {};
-
-// 🔐 PASSWORDS
-const passwords = {
-  private: "123",
-  public: "123"
-};
+let users = {}; // socket.id -> username
+let onlineUsers = {};
 
 io.on("connection", (socket) => {
+  console.log("User connected:", socket.id);
 
-  socket.on("join_secure_room", ({ type, password, username }) => {
+  socket.on("join", (username) => {
+    users[socket.id] = username;
+    onlineUsers[username] = socket.id;
 
-    if (password !== passwords[type]) {
-      socket.emit("access_denied");
-      return;
+    io.emit("onlineUsers", Object.keys(onlineUsers));
+  });
+
+  // PRIVATE MESSAGE
+  socket.on("privateMessage", ({ to, message, from }) => {
+    const targetSocket = onlineUsers[to];
+
+    if (targetSocket) {
+      io.to(targetSocket).emit("privateMessage", {
+        message,
+        from,
+      });
     }
-
-    const room = type + "-room";
-
-    socket.join(room);
-
-    users[socket.id] = { username, room };
-
-    socket.emit("access_granted");
-
-    updateUsers(room);
   });
 
-  socket.on("room_message", ({ room, message, from }) => {
-    io.to(room).emit("room_message", { message, from });
-  });
-
-  socket.on("typing", ({ user, room }) => {
-    socket.to(room).emit("typing", { user });
+  // TYPING
+  socket.on("typing", ({ to, from }) => {
+    const targetSocket = onlineUsers[to];
+    if (targetSocket) {
+      io.to(targetSocket).emit("typing", from);
+    }
   });
 
   socket.on("disconnect", () => {
-    const user = users[socket.id];
+    const username = users[socket.id];
+    delete onlineUsers[username];
+    delete users[socket.id];
 
-    if (user) {
-      delete users[socket.id];
-      updateUsers(user.room);
-    }
+    io.emit("onlineUsers", Object.keys(onlineUsers));
   });
-
-  function updateUsers(room) {
-    const online = Object.values(users)
-      .filter(u => u.room === room)
-      .map(u => u.username);
-
-    io.to(room).emit("online_users", online);
-  }
-
 });
 
 server.listen(3000, () => {
-  console.log("Server running 🚀 http://localhost:3000");
+  console.log("Server running on port 3000");
 });
