@@ -2,23 +2,27 @@
 <html>
 <head>
   <title>Chat</title>
+
+  <!-- MOBILE FIX -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
-<div class="container">
+<div class="app">
 
-  <!-- Sidebar -->
   <div class="sidebar">
     <h3>Users</h3>
     <ul id="users"></ul>
   </div>
 
-  <!-- Chat Area -->
   <div class="chat">
+
     <div class="header">
-      <h3 id="chatWith">Select user</h3>
-      <p id="typing"></p>
+      <span id="chatWith">Select user</span>
+      <small id="typing"></small>
     </div>
 
     <div id="messages"></div>
@@ -27,6 +31,7 @@
       <input id="message" placeholder="Type message..." />
       <button onclick="sendMessage()">➤</button>
     </div>
+
   </div>
 
 </div>

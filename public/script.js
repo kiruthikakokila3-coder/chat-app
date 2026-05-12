@@ -1,6 +1,12 @@
 const socket = io();
 
 const username = localStorage.getItem("username");
+
+// redirect if no login
+if (!username) {
+  window.location.href = "index.html";
+}
+
 socket.emit("join", username);
 
 let selectedUser = "";
@@ -9,7 +15,7 @@ const usersList = document.getElementById("users");
 const messagesDiv = document.getElementById("messages");
 const chatWith = document.getElementById("chatWith");
 
-// ONLINE USERS
+// USERS LIST
 socket.on("onlineUsers", (users) => {
   usersList.innerHTML = "";
 
@@ -17,40 +23,39 @@ socket.on("onlineUsers", (users) => {
     if (user !== username) {
       const li = document.createElement("li");
       li.innerText = user;
-      li.onclick = () => selectUser(user);
+
+      li.onclick = () => {
+        selectedUser = user;
+        chatWith.innerText = "Chat with " + user;
+        messagesDiv.innerHTML = "";
+      };
+
       usersList.appendChild(li);
     }
   });
 });
 
-// SELECT USER
-function selectUser(user) {
-  selectedUser = user;
-  chatWith.innerText = "Chat with " + user;
-  messagesDiv.innerHTML = "";
-}
-
-// SEND MESSAGE
+// SEND
 function sendMessage() {
   const input = document.getElementById("message");
-  const message = input.value;
+  const msg = input.value;
 
   if (!selectedUser) {
-    alert("Select user first");
+    alert("Select user");
     return;
   }
 
   socket.emit("privateMessage", {
     to: selectedUser,
-    message,
-    from: username,
+    message: msg,
+    from: username
   });
 
-  addMessage("You", message);
+  addMessage("You", msg);
   input.value = "";
 }
 
-// RECEIVE MESSAGE
+// RECEIVE
 socket.on("privateMessage", ({ message, from }) => {
   addMessage(from, message);
 });
@@ -58,9 +63,13 @@ socket.on("privateMessage", ({ message, from }) => {
 // ADD MESSAGE UI
 function addMessage(sender, msg) {
   const div = document.createElement("div");
+
   div.className = sender === "You" ? "me" : "other";
-  div.innerHTML = `<b>${sender}:</b> ${msg}`;
+  div.innerHTML = `<b>${sender}</b><br>${msg}`;
+
   messagesDiv.appendChild(div);
+
+  messagesDiv.scrollTop = messagesDiv.scrollHeight;
 }
 
 // TYPING
