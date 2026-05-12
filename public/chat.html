@@ -1,174 +1,40 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>💬 Chat</title>
-
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<!-- CACHE FIX -->
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0">
-
-<style>
-body {
-  margin:0;
-  font-family: Arial;
-  display:flex;
-  height:100vh;
-  background:#0f2027;
-  color:white;
-}
-
-#sidebar {
-  width:30%;
-  background:#1c2b36;
-  padding:10px;
-  overflow-y:auto;
-}
-
-#chatSection {
-  width:70%;
-  display:flex;
-  flex-direction:column;
-}
-
-#chat {
-  flex:1;
-  padding:10px;
-  overflow-y:auto;
-}
-
-.message {
-  margin:5px;
-  padding:8px;
-  border-radius:10px;
-  background:#2c5364;
-}
-
-.me {
-  background:#00c6ff;
-  text-align:right;
-}
-
-#bottom {
-  display:flex;
-}
-
-input, button {
-  padding:10px;
-  margin:5px;
-  border:none;
-  border-radius:5px;
-}
-
-#msg {
-  flex:1;
-}
-</style>
+  <title>Chat</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-<div id="sidebar">
-  <h3>🟢 Users</h3>
-  <ul id="users"></ul>
+<div id="loginBox">
+  <h3>Join Chat</h3>
+  <input id="name" placeholder="Your Name"><br><br>
+  <input id="pass" placeholder="Password"><br><br>
+  <button onclick="join()">Join</button>
 </div>
 
-<div id="chatSection">
+<div id="chatUI" style="display:none;">
 
-<div id="chat"></div>
+  <div class="header">
+    <span id="title"></span><br>
+    <span id="onlineUsers"></span>
+  </div>
 
-<div id="bottom">
-  <input id="msg" placeholder="Type message">
-  <input type="file" id="file">
-  <button onclick="send()">Send</button>
-</div>
+  <div id="chat"></div>
+  <div id="typing"></div>
+
+  <div class="input-box">
+    <input id="msg" placeholder="Type message..." oninput="typingEvent()">
+    <button onclick="send()">➤</button>
+  </div>
 
 </div>
 
 <script src="/socket.io/socket.io.js"></script>
-
-<script>
-const socket = io();
-
-// 👉 URLல இருந்து data எடுக்க
-const params = new URLSearchParams(window.location.search);
-let username = params.get("username");
-let room = params.get("room");
-
-// 👉 auto join
-if(username && room){
-  socket.emit("joinRoom", { username, room });
-}
-
-// 👉 send message
-function send() {
-  const msg = document.getElementById("msg").value;
-
-  if(msg){
-    socket.emit("message", {
-      user: username,
-      text: msg,
-      room: room
-    });
-  }
-
-  const file = document.getElementById("file").files[0];
-
-  if(file){
-    const reader = new FileReader();
-    reader.onload = () => {
-      socket.emit("image", {
-        user: username,
-        img: reader.result,
-        room: room
-      });
-    };
-    reader.readAsDataURL(file);
-  }
-
-  document.getElementById("msg").value = "";
-  document.getElementById("file").value = "";
-}
-
-// 👉 receive message
-socket.on("message", (data) => {
-  const chat = document.getElementById("chat");
-
-  chat.innerHTML += `
-    <div class="message ${data.user===username ? 'me':''}">
-      <b>${data.user}</b><br>${data.text}
-    </div>
-  `;
-
-  chat.scrollTop = chat.scrollHeight;
-});
-
-// 👉 receive image
-socket.on("image", (data) => {
-  const chat = document.getElementById("chat");
-
-  chat.innerHTML += `
-    <div class="message ${data.user===username ? 'me':''}">
-      <b>${data.user}</b><br>
-      <img src="${data.img}" width="150">
-    </div>
-  `;
-
-  chat.scrollTop = chat.scrollHeight;
-});
-
-// 👉 users list
-socket.on("userList", (users) => {
-  const ul = document.getElementById("users");
-  ul.innerHTML = "";
-
-  users.forEach(u => {
-    ul.innerHTML += `<li>🟢 ${u}</li>`;
-  });
-});
-</script>
+<script src="script.js"></script>
 
 </body>
 </html>

@@ -1,105 +1,68 @@
 const express = require("express");
 const http = require("http");
-const socketio = require("socket.io");
-const multer = require("multer");
+const { Server } = require("socket.io");
 
 const app = express();
 const server = http.createServer(app);
+const io = new Server(server);
 
-// 🔥 SOCKET SETUP (Render fix)
-const io = socketio(server, {
-  cors: {
-    origin: "*"
-  }
-});
-
-// 📁 STATIC
 app.use(express.static("public"));
-app.use("/uploads", express.static("uploads"));
 
-// 👥 USERS STORE
-let users = {}; // { username: socketId }
+let users = {};
 
-// 📎 FILE UPLOAD
-const storage = multer.diskStorage({
-  destination: "uploads/",
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + "-" + file.originalname);
-  }
-});
-const upload = multer({ storage });
+// 🔐 PASSWORDS
+const passwords = {
+  private: "123",
+  public: "123"
+};
 
-app.post("/upload", upload.single("file"), (req, res) => {
-  res.json({ file: req.file.filename });
-});
-
-// 🔥 SOCKET CONNECTION
 io.on("connection", (socket) => {
-  console.log("🟢 User connected:", socket.id);
 
-  // 👤 JOIN
-  socket.on("join", (username) => {
-    users[username] = socket.id;
-    socket.username = username;
+  socket.on("join_secure_room", ({ type, password, username }) => {
 
-    console.log(username + " joined");
-
-    // 🔥 send users list to everyone
-    io.emit("users_list", Object.keys(users));
-
-    // 🔔 notify others
-    socket.broadcast.emit("user_joined", username);
-  });
-
-  // 💬 PRIVATE MESSAGE
-  socket.on("private_message", ({ to, message, from }) => {
-    if (users[to]) {
-      io.to(users[to]).emit("private_message", {
-        from,
-        message
-      });
+    if (password !== passwords[type]) {
+      socket.emit("access_denied");
+      return;
     }
-  });
 
-  // ✍️ TYPING
-  socket.on("typing", (to) => {
-    if (users[to]) {
-      io.to(users[to]).emit("typing", socket.username);
-    }
-  });
+    const room = type + "-room";
 
-  // 👥 GROUP CHAT
-  socket.on("join_room", (room) => {
     socket.join(room);
-    console.log(socket.username + " joined room " + room);
+
+    users[socket.id] = { username, room };
+
+    socket.emit("access_granted");
+
+    updateUsers(room);
   });
 
-  socket.on("group_message", ({ room, message, from }) => {
-    io.to(room).emit("group_message", {
-      from,
-      message
-    });
+  socket.on("room_message", ({ room, message, from }) => {
+    io.to(room).emit("room_message", { message, from });
   });
 
-  // ❌ DISCONNECT
+  socket.on("typing", ({ user, room }) => {
+    socket.to(room).emit("typing", { user });
+  });
+
   socket.on("disconnect", () => {
-    console.log("🔴 User disconnected:", socket.id);
+    const user = users[socket.id];
 
-    if (socket.username) {
-      delete users[socket.username];
-
-      // 🔥 update users list
-      io.emit("users_list", Object.keys(users));
-
-      // 🔔 notify others
-      io.emit("user_left", socket.username);
+    if (user) {
+      delete users[socket.id];
+      updateUsers(user.room);
     }
   });
+
+  function updateUsers(room) {
+    const online = Object.values(users)
+      .filter(u => u.room === room)
+      .map(u => u.username);
+
+    io.to(room).emit("online_users", online);
+  }
+
 });
 
-// 🔥 PORT FIX
-const PORT = process.env.PORT || 3001;
-
-server.listen(PORT, () => {
-  console.log("🔥 Server running on port " + PORT);
+server.listen(3000, () => {
+  console.log("Server running 🚀 http://localhost:3000");
 });

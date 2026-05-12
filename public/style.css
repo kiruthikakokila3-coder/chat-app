@@ -1,42 +1,49 @@
 body {
   margin: 0;
   font-family: Arial;
-  display: flex;
+  background: #ece5dd;
 }
 
-#sidebar {
-  width: 30%;
-  background: #111;
+#loginBox {
+  padding: 30px;
+  text-align: center;
+}
+
+.header {
+  background: #075E54;
   color: white;
-  height: 100vh;
-  overflow: auto;
-}
-
-#chatArea {
-  width: 70%;
   padding: 10px;
 }
 
-.user {
+#chat {
+  height: 65vh;
+  overflow-y: auto;
   padding: 10px;
-  border-bottom: 1px solid #333;
-  cursor: pointer;
 }
 
-.user:hover {
-  background: #333;
+.msg {
+  background: white;
+  padding: 10px;
+  margin: 5px;
+  border-radius: 10px;
+  max-width: 70%;
 }
 
-.online {
-  color: lime;
+.me {
+  background: #dcf8c6;
+  margin-left: auto;
 }
 
-.offline {
-  color: red;
+.input-box {
+  display: flex;
+  padding: 10px;
 }
 
-/* 📱 MOBILE */
-@media(max-width: 600px){
-  #sidebar { width: 40%; }
-  #chatArea { width: 60%; }
+input {
+  flex: 1;
+  padding: 10px;
+}
+
+button {
+  padding: 10px;
 }

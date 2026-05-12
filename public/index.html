@@ -1,29 +1,24 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Pro Chat</title>
-  <link rel="stylesheet" href="style.css">
+  <title>Chat App</title>
 </head>
 <body>
 
-<div id="sidebar">
-  <h3>Users</h3>
-  <input id="username" placeholder="Your name">
-  <button onclick="join()">Join</button>
-  <div id="users"></div>
-</div>
+<h2>🔥 Chat App</h2>
 
-<div id="chatArea">
-  <h3 id="chatTitle">Select User</h3>
+<button onclick="goPrivate()">Private Chat</button>
+<button onclick="goPublic()">Group Chat</button>
 
-  <div id="messages"></div>
+<script>
+function goPrivate() {
+  window.location.href = "chat.html?type=private";
+}
 
-  <input id="msg" placeholder="Type message">
-  <button onclick="sendMsg()">Send</button>
-</div>
-
-<script src="https://chat-app-6ih8.onrender.com/socket.io/socket.io.js"></script>
-<script src="script.js"></script>
+function goPublic() {
+  window.location.href = "chat.html?type=public";
+}
+</script>
 
 </body>
 </html>
