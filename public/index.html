@@ -1,18 +1,36 @@
-<input id="name" placeholder="Your name">
-<input type="file" id="dp">
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Login</title>
+</head>
+<body>
+
+<h2>Chat Login</h2>
+
+<select id="type">
+  <option value="private">Private</option>
+  <option value="public">Public</option>
+</select>
+
+<input id="username" placeholder="Username">
+<input id="password" placeholder="Password">
+<input id="room" placeholder="Room Name">
+
 <button onclick="join()">Enter</button>
 
 <script>
 function join() {
-  const name = document.getElementById("name").value;
-  const file = document.getElementById("dp").files[0];
-
-  const reader = new FileReader();
-  reader.onload = () => {
-    localStorage.setItem("name", name);
-    localStorage.setItem("dp", reader.result);
-    location = "list.html";
+  const data = {
+    type: document.getElementById("type").value,
+    username: document.getElementById("username").value,
+    password: document.getElementById("password").value,
+    room: document.getElementById("room").value
   };
-  reader.readAsDataURL(file);
+
+  localStorage.setItem("chatUser", JSON.stringify(data));
+  window.location = "chat.html";
 }
 </script>
+
+</body>
+</html>

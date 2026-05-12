@@ -1,11 +1,116 @@
-<div id="messages"></div>
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Chat</title>
+</head>
+<body>
 
-<div id="typing"></div>
+<h2>Chat Room</h2>
 
-<div class="inputBox">
-  <input id="msg">
-  <button onclick="send()">➤</button>
-</div>
+<div id="chat" style="height:300px;overflow:auto;border:1px solid black;"></div>
+
+<input id="msg">
+<button onclick="send()">Send</button>
+
+<br><br>
+
+<!-- 📷 IMAGE -->
+<input type="file" id="imgInput">
+<button onclick="sendImage()">Send Image</button>
+
+<br><br>
+
+<!-- 🎤 VOICE -->
+<button onclick="record()">🎤 Record</button>
 
 <script src="/socket.io/socket.io.js"></script>
-<script src="script.js"></script>
+
+<script>
+const socket = io();
+const user = JSON.parse(localStorage.getItem("chatUser"));
+
+socket.emit("joinRoom", user);
+
+socket.on("errorMsg", msg => alert(msg));
+
+// TEXT
+socket.on("message", data => {
+  document.getElementById("chat").innerHTML += 
+    `<p><b>${data.user}:</b> ${data.text}</p>`;
+});
+
+// IMAGE
+socket.on("image", data => {
+  document.getElementById("chat").innerHTML += 
+    `<p><b>${data.user}:</b><br><img src="${data.img}" width="150"></p>`;
+});
+
+// VOICE
+socket.on("voice", data => {
+  document.getElementById("chat").innerHTML += 
+    `<p><b>${data.user}:</b><br><audio controls src="${data.audio}"></audio></p>`;
+});
+
+function send() {
+  const msg = document.getElementById("msg").value;
+  socket.emit("sendMessage", {
+    room: user.room,
+    user: user.username,
+    text: msg
+  });
+}
+
+// IMAGE UPLOAD
+async function sendImage() {
+  const file = document.getElementById("imgInput").files[0];
+  const formData = new FormData();
+  formData.append("image", file);
+
+  const res = await fetch("/upload", {
+    method: "POST",
+    body: formData
+  });
+
+  const data = await res.json();
+
+  socket.emit("sendImage", {
+    room: user.room,
+    user: user.username,
+    img: data.file
+  });
+}
+
+// 🎤 VOICE RECORD
+let mediaRecorder;
+let chunks = [];
+
+function record() {
+  navigator.mediaDevices.getUserMedia({ audio: true })
+    .then(stream => {
+      mediaRecorder = new MediaRecorder(stream);
+
+      mediaRecorder.start();
+      chunks = [];
+
+      mediaRecorder.ondataavailable = e => {
+        chunks.push(e.data);
+      };
+
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(chunks, { type: "audio/webm" });
+        const audioURL = URL.createObjectURL(blob);
+
+        socket.emit("sendVoice", {
+          room: user.room,
+          user: user.username,
+          audio: audioURL
+        });
+      };
+
+      setTimeout(() => mediaRecorder.stop(), 3000); // 3 sec
+    });
+}
+</script>
+
+</body>
+</html>
