@@ -1,9 +1,21 @@
-<input id="name" placeholder="Enter name">
-<button onclick="go()">Next</button>
-
-<script>
-function go(){
-  localStorage.setItem("user", name.value);
-  location.href="inbox.html";
-}
-</script>
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Login</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="login-box">
+    <h2>Login</h2>
+    <input id="username" placeholder="Username">
+    <button onclick="login()">Login</button>
+  </div>
+  <script>
+    function login() {
+      const name = document.getElementById("username").value;
+      localStorage.setItem("username", name);
+      window.location.href = "select.html";
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Select Room</title>
+</head>
+<body>
+  <h2>Select Chat Type</h2>
+  <button onclick="choose('public')">Public Chat</button>
+  <button onclick="choose('private')">Private Chat</button>
+
+  <script>
+    function choose(room) {
+      localStorage.setItem("room", room);
+      window.location.href = "chat.html";
+    }
+  </script>
+</body>
+</html>
