@@ -1,0 +1,18 @@
+<h3>Chats</h3>
+<div id="list"></div>
+
+<script>
+const users = ["Arun", "Kumar", "Rahul"]; // demo users
+
+const list = document.getElementById("list");
+
+users.forEach(u => {
+  const div = document.createElement("div");
+  div.innerHTML = `<b>${u}</b>`;
+  div.onclick = () => {
+    localStorage.setItem("chatUser", u);
+    location = "chat.html";
+  };
+  list.appendChild(div);
+});
+</script>

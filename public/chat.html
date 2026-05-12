@@ -1,34 +1,11 @@
-<!DOCTYPE html>
-<html>
-<head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="stylesheet" href="style.css">
-</head>
+<div id="messages"></div>
 
-<body>
+<div id="typing"></div>
 
-<div class="app">
-
-  <div class="header">Chat Room</div>
-
-  <div id="messages"></div>
-
-  <div id="typing"></div>
-
-  <div class="inputBox">
-    <input id="msg" placeholder="Type message">
-    <button onclick="send()">➤</button>
-  </div>
-
-  <input type="file" id="img">
-  <button onclick="sendImage()">📸 Image</button>
-
-  <button onclick="record()">🎤 Voice</button>
-
+<div class="inputBox">
+  <input id="msg">
+  <button onclick="send()">➤</button>
 </div>
 
 <script src="/socket.io/socket.io.js"></script>
 <script src="script.js"></script>
-
-</body>
-</html>

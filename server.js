@@ -1,63 +1,55 @@
 const express = require("express");
 const http = require("http");
-const { Server } = require("socket.io");
+const socketio = require("socket.io");
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server);
+const io = socketio(server);
 
 app.use(express.static("public"));
 
-let users = {};
-let rooms = {};
+let users = {}; // socket.id -> user
+let onlineUsers = {}; // username -> socket.id
 
 io.on("connection", (socket) => {
 
-  socket.on("joinRoom", ({ username, room, password }) => {
+  socket.on("join", ({ username, dp }) => {
+    users[socket.id] = { username, dp };
+    onlineUsers[username] = socket.id;
 
-    if (!rooms[room]) {
-      rooms[room] = { password, users: [] };
-    }
-
-    if (rooms[room].password && rooms[room].password !== password) {
-      socket.emit("wrongPassword");
-      return;
-    }
-
-    users[socket.id] = { username, room };
-    rooms[room].users.push(username);
-
-    socket.join(room);
-
-    io.to(room).emit("roomUsers", rooms[room].users);
+    io.emit("onlineUsers", Object.keys(onlineUsers));
   });
 
   socket.on("message", (data) => {
-    const user = users[socket.id];
-    if (user) {
-      io.to(user.room).emit("message", data);
+    const toSocket = onlineUsers[data.to];
+
+    // send to receiver
+    if (toSocket) {
+      io.to(toSocket).emit("message", data);
+
+      // seen tick
+      io.to(socket.id).emit("seen", data.to);
     }
+
+    // send to self
+    socket.emit("message", data);
   });
 
-  socket.on("typing", (name) => {
-    const user = users[socket.id];
-    if (user) {
-      socket.to(user.room).emit("typing", name);
+  socket.on("typing", (to) => {
+    const toSocket = onlineUsers[to];
+    if (toSocket) {
+      io.to(toSocket).emit("typing", users[socket.id].username);
     }
   });
 
   socket.on("disconnect", () => {
     const user = users[socket.id];
-    if (!user) return;
-
-    rooms[user.room].users =
-      rooms[user.room].users.filter(u => u !== user.username);
-
-    io.to(user.room).emit("roomUsers", rooms[user.room].users);
-
-    delete users[socket.id];
+    if (user) {
+      delete onlineUsers[user.username];
+      io.emit("onlineUsers", Object.keys(onlineUsers));
+    }
   });
 
 });
 
-server.listen(3000, () => console.log("Server running"));
+server.listen(3000, () => console.log("🔥 Server running"));

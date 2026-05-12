@@ -1,85 +1,18 @@
-<!DOCTYPE html>
-<html>
-<head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Join</title>
-
-<style>
-body {
-  font-family: Arial;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  margin: 0;
-  background: #ece5dd;
-}
-
-.box {
-  background: white;
-  padding: 20px;
-  border-radius: 10px;
-  width: 90%;
-  max-width: 300px;
-  text-align: center;
-}
-
-input {
-  width: 100%;
-  padding: 10px;
-  margin-top: 10px;
-}
-
-button {
-  padding: 10px;
-  margin-top: 10px;
-  width: 100%;
-  background: #075e54;
-  color: white;
-  border: none;
-}
-</style>
-
-</head>
-
-<body>
-
-<div class="box">
-  <h3>Join Chat</h3>
-
-  <input id="name" placeholder="Name">
-  <input id="room" placeholder="Room">
-  <input id="pass" placeholder="Password (optional)">
-  <input type="file" id="dp">
-
-  <button onclick="join()">Join</button>
-</div>
+<input id="name" placeholder="Your name">
+<input type="file" id="dp">
+<button onclick="join()">Enter</button>
 
 <script>
 function join() {
   const name = document.getElementById("name").value;
-  const room = document.getElementById("room").value;
-  const pass = document.getElementById("pass").value;
   const file = document.getElementById("dp").files[0];
 
-  let reader = new FileReader();
-
-  reader.onload = function() {
-    localStorage.setItem("username", name);
-    localStorage.setItem("room", room);
-    localStorage.setItem("password", pass);
-    localStorage.setItem("dp", reader.result || "");
-
-    window.location = "chat.html";
+  const reader = new FileReader();
+  reader.onload = () => {
+    localStorage.setItem("name", name);
+    localStorage.setItem("dp", reader.result);
+    location = "list.html";
   };
-
-  if (file) {
-    reader.readAsDataURL(file);
-  } else {
-    reader.onload();
-  }
+  reader.readAsDataURL(file);
 }
 </script>
-
-</body>
-</html>
