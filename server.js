@@ -1,37 +1,72 @@
 const express = require("express");
-const http = require("http");
-const { Server } = require("socket.io");
-
 const app = express();
-const server = http.createServer(app);
-const io = new Server(server);
+const http = require("http").createServer(app);
+const io = require("socket.io")(http);
 
+// ✅ public folder serve
 app.use(express.static("public"));
 
-let users = [];
+// ✅ default route → index.html open ஆகும்
+app.get("/", (req, res) => {
+  res.sendFile(__dirname + "/public/index.html");
+});
+
+// 👥 users store
+let users = {};
 
 io.on("connection", (socket) => {
 
-  console.log("User connected");
+  // 🔥 join room
+  socket.on("joinRoom", ({ username, room }) => {
+    socket.join(room);
 
-  socket.on("join", (user) => {
+    users[socket.id] = { username, room };
 
-    users.push(user);
+    socket.to(room).emit("message", {
+      user: "System",
+      text: `${username} joined 👋`
+    });
 
-    io.emit("users", users);
+    updateUsers(room);
   });
 
+  // 💬 message
   socket.on("message", (data) => {
-
-    io.emit("message", data);
+    io.to(data.room).emit("message", data);
   });
 
+  // 📸 image
+  socket.on("image", (data) => {
+    io.to(data.room).emit("image", data);
+  });
+
+  // ❌ disconnect
   socket.on("disconnect", () => {
+    const user = users[socket.id];
 
-    console.log("User disconnected");
+    if (user) {
+      socket.to(user.room).emit("message", {
+        user: "System",
+        text: `${user.username} left ❌`
+      });
+
+      delete users[socket.id];
+      updateUsers(user.room);
+    }
   });
+
+  // 🟢 update users list
+  function updateUsers(room) {
+    const roomUsers = Object.values(users)
+      .filter(u => u.room === room)
+      .map(u => u.username);
+
+    io.to(room).emit("userList", roomUsers);
+  }
+
 });
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-  console.log("Server running");
+
+// 🚀 start server
+http.listen(3001, () => {
+  console.log("🔥 Server running on port 3001");
 });

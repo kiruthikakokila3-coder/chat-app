@@ -1,407 +1,82 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>WhatsApp Clone</title>
+<title>🔥 Chat App Login</title>
 
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: Arial;
-    }
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    body {
-      background: #0b141a;
-      color: white;
-      height: 100vh;
-    }
+<style>
+body {
+  margin:0;
+  font-family: Arial;
+  height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  background: linear-gradient(135deg, #00c6ff, #0072ff);
+}
 
-    .dark {
-      background: black !important;
-    }
+#box {
+  background:white;
+  padding:30px;
+  border-radius:15px;
+  width:90%;
+  max-width:300px;
+  text-align:center;
+}
 
-    #loginPage {
-      width: 100%;
-      height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: #0b141a;
-    }
+h2 {
+  margin-bottom:20px;
+}
 
-    .login-box {
-      width: 350px;
-      background: #202c33;
-      padding: 30px;
-      border-radius: 10px;
-      text-align: center;
-    }
+input {
+  width:100%;
+  padding:12px;
+  margin:10px 0;
+  border-radius:8px;
+  border:1px solid #ccc;
+}
 
-    .login-box input,
-    .login-box button {
-      width: 100%;
-      padding: 12px;
-      margin-top: 10px;
-      border: none;
-      border-radius: 5px;
-    }
+button {
+  width:100%;
+  padding:12px;
+  border:none;
+  border-radius:8px;
+  background:#0072ff;
+  color:white;
+  font-size:16px;
+}
 
-    .login-box button {
-      background: #00a884;
-      color: white;
-    }
+button:hover {
+  background:#0055cc;
+}
+</style>
 
-    .app {
-      width: 100%;
-      height: 100vh;
-      display: flex;
-    }
-
-    .sidebar {
-      width: 30%;
-      background: #202c33;
-      overflow-y: auto;
-    }
-
-    .profile {
-      padding: 20px;
-      text-align: center;
-      background: #2a3942;
-    }
-
-    .profile img {
-      width: 70px;
-      height: 70px;
-      border-radius: 50%;
-      object-fit: cover;
-    }
-
-    .user {
-      padding: 15px;
-      border-bottom: 1px solid #2a3942;
-    }
-
-    .chat-area {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .chat-header {
-      padding: 15px;
-      background: #202c33;
-    }
-
-    .messages {
-      flex: 1;
-      overflow-y: auto;
-      padding: 15px;
-      background: #0b141a;
-    }
-
-    .msg {
-      max-width: 60%;
-      padding: 10px;
-      border-radius: 10px;
-      margin: 10px 0;
-    }
-
-    .me {
-      background: #005c4b;
-      margin-left: auto;
-    }
-
-    .other {
-      background: #202c33;
-    }
-
-    .input-box {
-      display: flex;
-      padding: 10px;
-      background: #202c33;
-    }
-
-    .input-box input {
-      flex: 1;
-      padding: 10px;
-      border: none;
-      border-radius: 5px;
-    }
-
-    .input-box button {
-      margin-left: 5px;
-      padding: 10px;
-      border: none;
-      border-radius: 5px;
-      background: #00a884;
-      color: white;
-    }
-
-    img.chat-image {
-      width: 200px;
-      border-radius: 10px;
-      margin-top: 10px;
-    }
-  </style>
 </head>
+
 <body>
 
-<div id="loginPage">
-  <div class="login-box">
+<div id="box">
+  <h2>💬 Chat App</h2>
 
-    <h2>💬 WhatsApp Clone</h2>
+  <input id="username" placeholder="Enter your name">
+  <input id="room" placeholder="Enter room ID">
 
-    <input id="name" placeholder="Enter Name">
-
-    <input id="password" type="password" placeholder="Enter Password">
-
-    <input type="file" id="dp">
-
-    <button onclick="login()">Login</button>
-
-  </div>
+  <button onclick="join()">Join Chat</button>
 </div>
-
-<div class="app" id="app" style="display:none;">
-
-  <div class="sidebar">
-
-    <div class="profile">
-
-      <img id="mydp" src="https://i.imgur.com/6VBx3io.png">
-
-      <h3 id="myname"></h3>
-
-      <button onclick="toggleDark()">🌙 Dark Mode</button>
-
-    </div>
-
-    <div id="users"></div>
-
-  </div>
-
-  <div class="chat-area">
-
-    <div class="chat-header">
-      <h2>Realtime Chat 💬</h2>
-    </div>
-
-    <div class="messages" id="messages"></div>
-
-    <div class="input-box">
-
-      <input id="msg" placeholder="Type message">
-
-      <input type="file" id="camera" accept="image/*" capture="camera">
-
-      <button onclick="send()">Send</button>
-
-      <button onclick="startRecording()">🎤</button>
-
-    </div>
-
-  </div>
-
-</div>
-
-<script src="/socket.io/socket.io.js"></script>
 
 <script>
-const socket = io();
+function join() {
+  const username = document.getElementById("username").value;
+  const room = document.getElementById("room").value;
 
-Notification.requestPermission();
-
-let username = "";
-let mydp = "";
-
-function login() {
-
-  username = document.getElementById("name").value;
-
-  const password = document.getElementById("password").value;
-
-  const file = document.getElementById("dp").files[0];
-
-  if(username === "" || password === "") {
-    alert("Fill all fields");
+  if(!username || !room){
+    alert("Enter details!");
     return;
   }
 
-  if(file) {
-
-    const reader = new FileReader();
-
-    reader.onload = () => {
-      mydp = reader.result;
-      startChat();
-    }
-
-    reader.readAsDataURL(file);
-
-  } else {
-
-    startChat();
-  }
-}
-
-function startChat() {
-
-  document.getElementById("loginPage").style.display = "none";
-
-  document.getElementById("app").style.display = "flex";
-
-  document.getElementById("myname").innerHTML = username;
-
-  document.getElementById("mydp").src = mydp || "https://i.imgur.com/6VBx3io.png";
-
-  socket.emit("join", {
-    name: username,
-    dp: mydp,
-    online: true
-  });
-}
-
-function send() {
-
-  const msg = document.getElementById("msg").value;
-
-  if(msg === "") return;
-
-  socket.emit("message", {
-    user: username,
-    text: msg,
-    time: new Date().toLocaleTimeString(),
-    online: true
-  });
-
-  document.getElementById("msg").value = "";
-}
-
-socket.on("message", (data) => {
-
-  const div = document.createElement("div");
-
-  div.classList.add("msg");
-
-  if(data.user === username) {
-    div.classList.add("me");
-  } else {
-    div.classList.add("other");
-  }
-
-  let ticks = data.online ? '✔✔' : '✔';
-
-  div.innerHTML = `
-    <b>${data.user}</b><br>
-    ${data.text || ''}<br>
-    <small>${data.time} ${ticks}</small>
-  `;
-
-  if(data.image) {
-    div.innerHTML += `
-      <br>
-      <img class="chat-image" src="${data.image}">
-    `;
-  }
-
-  if(data.audio) {
-    div.innerHTML += `
-      <br>
-      <audio controls src="${data.audio}"></audio>
-    `;
-  }
-
-  document.getElementById("messages").appendChild(div);
-
-  if(data.user !== username) {
-
-    new Notification(data.user, {
-      body: data.text || 'Photo / Voice Message'
-    });
-  }
-});
-
-socket.on("users", (users) => {
-
-  document.getElementById("users").innerHTML = "";
-
-  users.forEach((u) => {
-
-    const div = document.createElement("div");
-
-    div.classList.add("user");
-
-    div.innerHTML = `${u.online ? '🟢' : '⚫'} ${u.name}`;
-
-    document.getElementById("users").appendChild(div);
-  });
-});
-
-const cam = document.getElementById("camera");
-
-cam.addEventListener("change", () => {
-
-  const file = cam.files[0];
-
-  const reader = new FileReader();
-
-  reader.onload = () => {
-
-    socket.emit("message", {
-      user: username,
-      image: reader.result,
-      time: new Date().toLocaleTimeString(),
-      online: true
-    });
-  }
-
-  reader.readAsDataURL(file);
-});
-
-let mediaRecorder;
-let audioChunks = [];
-
-async function startRecording() {
-
-  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-
-  mediaRecorder = new MediaRecorder(stream);
-
-  mediaRecorder.start();
-
-  mediaRecorder.ondataavailable = (e) => {
-    audioChunks.push(e.data);
-  }
-
-  mediaRecorder.onstop = () => {
-
-    const blob = new Blob(audioChunks, { type: 'audio/mp3' });
-
-    const reader = new FileReader();
-
-    reader.onload = () => {
-
-      socket.emit("message", {
-        user: username,
-        audio: reader.result,
-        time: new Date().toLocaleTimeString(),
-        online: true
-      });
-    }
-
-    reader.readAsDataURL(blob);
-
-    audioChunks = [];
-  }
-
-  setTimeout(() => {
-    mediaRecorder.stop();
-  }, 5000);
-}
-
-function toggleDark() {
-  document.body.classList.toggle("dark");
+  // redirect to chat page
+  window.location.href = `chat.html?username=${username}&room=${room}`;
 }
 </script>
 

@@ -1,85 +1,173 @@
 <!DOCTYPE html>
 <html>
+<head>
+<title>💬 Chat</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- CACHE FIX -->
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+
+<style>
+body {
+  margin:0;
+  font-family: Arial;
+  display:flex;
+  height:100vh;
+  background:#0f2027;
+  color:white;
+}
+
+#sidebar {
+  width:30%;
+  background:#1c2b36;
+  padding:10px;
+  overflow-y:auto;
+}
+
+#chatSection {
+  width:70%;
+  display:flex;
+  flex-direction:column;
+}
+
+#chat {
+  flex:1;
+  padding:10px;
+  overflow-y:auto;
+}
+
+.message {
+  margin:5px;
+  padding:8px;
+  border-radius:10px;
+  background:#2c5364;
+}
+
+.me {
+  background:#00c6ff;
+  text-align:right;
+}
+
+#bottom {
+  display:flex;
+}
+
+input, button {
+  padding:10px;
+  margin:5px;
+  border:none;
+  border-radius:5px;
+}
+
+#msg {
+  flex:1;
+}
+</style>
+</head>
+
 <body>
 
-<h2>Chat App</h2>
+<div id="sidebar">
+  <h3>🟢 Users</h3>
+  <ul id="users"></ul>
+</div>
 
-<h3>Online Users</h3>
-<ul id="users"></ul>
+<div id="chatSection">
 
-<h3>Messages</h3>
-<ul id="messages"></ul>
+<div id="chat"></div>
 
-<input id="to" placeholder="Send to (username)">
-<input id="msg" placeholder="Message">
-<button onclick="send()">Send</button>
+<div id="bottom">
+  <input id="msg" placeholder="Type message">
+  <input type="file" id="file">
+  <button onclick="send()">Send</button>
+</div>
 
-<br><br>
-
-<input type="file" id="file">
-<button onclick="upload()">Send File</button>
+</div>
 
 <script src="/socket.io/socket.io.js"></script>
+
 <script>
 const socket = io();
-const username = localStorage.getItem("username");
 
-socket.emit("login", username);
+// 👉 URLல இருந்து data எடுக்க
+const params = new URLSearchParams(window.location.search);
+let username = params.get("username");
+let room = params.get("room");
 
-// Show users
-socket.on("users", (users) => {
-    const ul = document.getElementById("users");
-    ul.innerHTML = "";
-    users.forEach(u => {
-        const li = document.createElement("li");
-        li.textContent = u;
-        ul.appendChild(li);
-    });
-});
+// 👉 auto join
+if(username && room){
+  socket.emit("joinRoom", { username, room });
+}
 
-// Send message
+// 👉 send message
 function send() {
-    socket.emit("private message", {
-        to: document.getElementById("to").value,
-        message: document.getElementById("msg").value
+  const msg = document.getElementById("msg").value;
+
+  if(msg){
+    socket.emit("message", {
+      user: username,
+      text: msg,
+      room: room
     });
+  }
+
+  const file = document.getElementById("file").files[0];
+
+  if(file){
+    const reader = new FileReader();
+    reader.onload = () => {
+      socket.emit("image", {
+        user: username,
+        img: reader.result,
+        room: room
+      });
+    };
+    reader.readAsDataURL(file);
+  }
+
+  document.getElementById("msg").value = "";
+  document.getElementById("file").value = "";
 }
 
-// Receive message
-socket.on("private message", (data) => {
-    alert("New message from " + data.from);
-    const li = document.createElement("li");
-    li.textContent = data.from + ": " + data.message;
-    document.getElementById("messages").appendChild(li);
+// 👉 receive message
+socket.on("message", (data) => {
+  const chat = document.getElementById("chat");
+
+  chat.innerHTML += `
+    <div class="message ${data.user===username ? 'me':''}">
+      <b>${data.user}</b><br>${data.text}
+    </div>
+  `;
+
+  chat.scrollTop = chat.scrollHeight;
 });
 
-// Upload file
-async function upload() {
-    const file = document.getElementById("file").files[0];
-    const formData = new FormData();
-    formData.append("file", file);
+// 👉 receive image
+socket.on("image", (data) => {
+  const chat = document.getElementById("chat");
 
-    const res = await fetch("/upload", {
-        method: "POST",
-        body: formData
-    });
+  chat.innerHTML += `
+    <div class="message ${data.user===username ? 'me':''}">
+      <b>${data.user}</b><br>
+      <img src="${data.img}" width="150">
+    </div>
+  `;
 
-    const data = await res.json();
+  chat.scrollTop = chat.scrollHeight;
+});
 
-    const url = "/uploads/" + data.file;
+// 👉 users list
+socket.on("userList", (users) => {
+  const ul = document.getElementById("users");
+  ul.innerHTML = "";
 
-    let msg = "";
-
-    if (file.type.startsWith("image")) {
-        msg = `<img src="${url}" width="100">`;
-    } else if (file.type.startsWith("audio")) {
-        msg = `<audio controls src="${url}"></audio>`;
-    }
-
-    const li = document.createElement("li");
-    li.innerHTML = msg;
-    document.getElementById("messages").appendChild(li);
-}
+  users.forEach(u => {
+    ul.innerHTML += `<li>🟢 ${u}</li>`;
+  });
+});
 </script>
 
 </body>
