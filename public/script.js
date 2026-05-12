@@ -12,10 +12,6 @@ socket.on("wrongPassword", () => {
   window.location = "index.html";
 });
 
-socket.on("roomUsers", (users) => {
-  document.getElementById("users").innerText = "Users: " + users.join(", ");
-});
-
 function send() {
   const msg = document.getElementById("msg").value;
 
@@ -24,17 +20,35 @@ function send() {
     msg,
     dp
   });
+
+  document.getElementById("msg").value = "";
 }
 
 socket.on("message", (data) => {
-  const div = document.createElement("div");
 
-  div.innerHTML = `
-    <img src="${data.dp}" width="30">
-    <b>${data.name}</b>: ${data.msg}
+  const isMe = data.name === name;
+
+  const msgDiv = document.createElement("div");
+  msgDiv.className = "msg " + (isMe ? "me" : "other");
+
+  msgDiv.innerHTML = `
+    ${!isMe ? `<img src="${data.dp}" class="dp">` : ""}
+
+    <div class="bubble">
+      <b>${data.name}</b><br>
+      ${data.msg}
+    </div>
+
+    ${isMe ? `<img src="${data.dp}" class="dp">` : ""}
   `;
 
-  document.getElementById("messages").appendChild(div);
+  const messages = document.getElementById("messages");
+
+  messages.appendChild(msgDiv);
+
+  // 🔥 AUTO SCROLL
+  messages.scrollTop = messages.scrollHeight;
+
 });
 
 // IMAGE
@@ -45,7 +59,7 @@ function sendImage() {
   reader.onload = function() {
     socket.emit("message", {
       name,
-      msg: `<img src="${reader.result}" width="100">`,
+      msg: `<img src="${reader.result}" width="120">`,
       dp
     });
   };
@@ -57,12 +71,12 @@ function sendImage() {
 function record() {
   navigator.mediaDevices.getUserMedia({ audio: true })
     .then(stream => {
-      const mediaRecorder = new MediaRecorder(stream);
+      const recorder = new MediaRecorder(stream);
       let chunks = [];
 
-      mediaRecorder.ondataavailable = e => chunks.push(e.data);
+      recorder.ondataavailable = e => chunks.push(e.data);
 
-      mediaRecorder.onstop = () => {
+      recorder.onstop = () => {
         const blob = new Blob(chunks);
         const url = URL.createObjectURL(blob);
 
@@ -73,9 +87,8 @@ function record() {
         });
       };
 
-      mediaRecorder.start();
-
-      setTimeout(() => mediaRecorder.stop(), 3000);
+      recorder.start();
+      setTimeout(() => recorder.stop(), 3000);
     });
 }
 

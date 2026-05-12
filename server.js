@@ -9,18 +9,16 @@ const io = new Server(server);
 app.use(express.static("public"));
 
 let users = {};
-let rooms = {}; // roomName -> { password, users[] }
+let rooms = {};
 
 io.on("connection", (socket) => {
 
   socket.on("joinRoom", ({ username, room, password }) => {
 
-    // create room
     if (!rooms[room]) {
       rooms[room] = { password, users: [] };
     }
 
-    // check password
     if (rooms[room].password && rooms[room].password !== password) {
       socket.emit("wrongPassword");
       return;
@@ -59,6 +57,7 @@ io.on("connection", (socket) => {
 
     delete users[socket.id];
   });
+
 });
 
 server.listen(3000, () => console.log("Server running"));
