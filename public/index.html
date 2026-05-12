@@ -1,36 +1,9 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Login</title>
-</head>
-<body>
-
-<h2>Chat Login</h2>
-
-<select id="type">
-  <option value="private">Private</option>
-  <option value="public">Public</option>
-</select>
-
-<input id="username" placeholder="Username">
-<input id="password" placeholder="Password">
-<input id="room" placeholder="Room Name">
-
-<button onclick="join()">Enter</button>
+<input id="name" placeholder="Enter name">
+<button onclick="go()">Next</button>
 
 <script>
-function join() {
-  const data = {
-    type: document.getElementById("type").value,
-    username: document.getElementById("username").value,
-    password: document.getElementById("password").value,
-    room: document.getElementById("room").value
-  };
-
-  localStorage.setItem("chatUser", JSON.stringify(data));
-  window.location = "chat.html";
+function go(){
+  localStorage.setItem("user", name.value);
+  location.href="inbox.html";
 }
 </script>
-
-</body>
-</html>

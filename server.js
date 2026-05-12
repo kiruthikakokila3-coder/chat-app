@@ -11,11 +11,8 @@ const io = socketIo(server);
 
 app.use(express.static("public"));
 
-/* =========================
-   📁 UPLOAD FIX (IMPORTANT)
-========================= */
+/* 📁 Upload setup */
 const uploadPath = "public/uploads";
-
 if (!fs.existsSync(uploadPath)) {
   fs.mkdirSync(uploadPath, { recursive: true });
 }
@@ -29,108 +26,35 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
-// API for image upload
 app.post("/upload", upload.single("image"), (req, res) => {
   res.json({ file: "/uploads/" + req.file.filename });
 });
 
-/* =========================
-   📊 DATA STORAGE (TEMP)
-========================= */
-let usersOnline = {};   // { username: socketId }
-let messages = {};      // { room: [messages] }
-let requests = {};      // { username: [requests] }
-let rooms = {};         // { room: {users, password, type} }
+/* 📊 Data */
+let users = {};
+let rooms = {};
+let messages = {};
 
-/* =========================
-   🔌 SOCKET.IO
-========================= */
 io.on("connection", (socket) => {
 
-  /* 🟢 LOGIN (ONLINE USERS) */
   socket.on("login", (username) => {
-    usersOnline[username] = socket.id;
-    io.emit("onlineUsers", Object.keys(usersOnline));
+    users[username] = socket.id;
+    io.emit("onlineUsers", Object.keys(users));
   });
 
-  /* 📩 SEND REQUEST */
-  socket.on("sendRequest", ({ from, to }) => {
-    if (!requests[to]) requests[to] = [];
-
-    // avoid duplicate
-    if (!requests[to].includes(from)) {
-      requests[to].push(from);
-    }
-
-    if (usersOnline[to]) {
-      io.to(usersOnline[to]).emit("newRequest", from);
-    }
-  });
-
-  /* ✅ ACCEPT REQUEST */
-  socket.on("acceptRequest", ({ from, to }) => {
-    const room = `${from}-${to}`;
-
+  socket.on("joinRoom", ({ username, room }) => {
     socket.join(room);
 
-    if (!messages[room]) messages[room] = [];
+    if (!rooms[room]) rooms[room] = [];
+    if (!rooms[room].includes(username)) rooms[room].push(username);
 
-    if (usersOnline[from]) {
-      io.to(usersOnline[from]).emit("requestAccepted", { room });
-    }
+    io.to(room).emit("status", `${username} joined 🟢`);
   });
 
-  /* 🚪 JOIN ROOM */
-  socket.on("joinRoom", ({ username, room, password, type }) => {
-
-    // create room if not exists
-    if (!rooms[room]) {
-      rooms[room] = {
-        users: [],
-        password,
-        type
-      };
-    }
-
-    // 🔐 password check
-    if (rooms[room].password !== password) {
-      socket.emit("errorMsg", "❌ Wrong password");
-      return;
-    }
-
-    // 🔒 private limit (max 2)
-    if (type === "private" && rooms[room].users.length >= 2) {
-      socket.emit("errorMsg", "❌ Private room full (2 max)");
-      return;
-    }
-
-    // add user if not exists
-    if (!rooms[room].users.includes(username)) {
-      rooms[room].users.push(username);
-    }
-
-    socket.join(room);
-
-    // create message storage
-    if (!messages[room]) messages[room] = [];
-
-    // send old messages
-    socket.emit("oldMessages", messages[room]);
-
-    // join message
-    io.to(room).emit("message", {
-      user: "System",
-      text: `${username} joined`,
-      seen: true
-    });
-  });
-
-  /* 💬 TEXT MESSAGE */
   socket.on("sendMessage", ({ room, user, text }) => {
     const msg = {
       user,
       text,
-      seen: false,
       time: new Date().toLocaleTimeString()
     };
 
@@ -140,48 +64,25 @@ io.on("connection", (socket) => {
     io.to(room).emit("message", msg);
   });
 
-  /* 📷 IMAGE */
-  socket.on("sendImage", ({ room, user, img }) => {
-    io.to(room).emit("image", {
-      user,
-      img,
-      time: new Date().toLocaleTimeString()
-    });
+  socket.on("typing", ({ room, user }) => {
+    socket.to(room).emit("typing", user);
   });
 
-  /* 🎤 VOICE */
-  socket.on("sendVoice", ({ room, user, audio }) => {
-    io.to(room).emit("voice", {
-      user,
-      audio,
-      time: new Date().toLocaleTimeString()
-    });
+  socket.on("seen", ({ room, user }) => {
+    socket.to(room).emit("seen", user);
   });
 
-  /* 👀 MARK AS SEEN */
-  socket.on("markSeen", (room) => {
-    if (messages[room]) {
-      messages[room].forEach(m => m.seen = true);
-    }
-  });
-
-  /* ❌ DISCONNECT */
   socket.on("disconnect", () => {
-    for (let user in usersOnline) {
-      if (usersOnline[user] === socket.id) {
-        delete usersOnline[user];
+    for (let u in users) {
+      if (users[u] === socket.id) {
+        delete users[u];
+        io.emit("onlineUsers", Object.keys(users));
       }
     }
-
-    io.emit("onlineUsers", Object.keys(usersOnline));
   });
 
 });
 
-/* =========================
-   🚀 START SERVER
-========================= */
-const PORT = 3000;
-server.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
+server.listen(3000, () => {
+  console.log("🚀 Server running on http://localhost:3000");
 });

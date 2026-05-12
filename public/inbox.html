@@ -1,52 +1,11 @@
-<h2>Inbox</h2>
+<h2>Select Room</h2>
 
-<div id="users"></div>
+<button onclick="join('public')">Public</button>
+<button onclick="join('private')">Private</button>
 
-<h3>Requests</h3>
-<div id="requests"></div>
-
-<script src="/socket.io/socket.io.js"></script>
 <script>
-const socket = io();
-const user = JSON.parse(localStorage.getItem("chatUser"));
-
-socket.emit("login", user.username);
-
-// ONLINE
-socket.on("onlineUsers", list => {
-  let html = "";
-  list.forEach(u => {
-    if (u !== user.username) {
-      html += `<p onclick="sendReq('${u}')">${u} 🟢</p>`;
-    }
-  });
-  users.innerHTML = html;
-});
-
-function sendReq(to) {
-  socket.emit("sendRequest", {
-    from: user.username,
-    to
-  });
+function join(room){
+  localStorage.setItem("room", room);
+  location.href="chat.html";
 }
-
-// RECEIVE
-socket.on("newRequest", from => {
-  requests.innerHTML += `
-    <p>${from}
-    <button onclick="accept('${from}')">Accept</button>
-    </p>`;
-});
-
-function accept(from) {
-  socket.emit("acceptRequest", {
-    from,
-    to: user.username
-  });
-}
-
-socket.on("requestAccepted", data => {
-  localStorage.setItem("room", data.room);
-  window.location = "chat.html";
-});
 </script>

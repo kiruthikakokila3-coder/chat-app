@@ -1,64 +1,61 @@
 const socket = io();
 
-const name = localStorage.getItem("name");
-const dp = localStorage.getItem("dp");
-const to = localStorage.getItem("chatUser");
+const chat = document.getElementById("chat");
+const msg = document.getElementById("msg");
+const typingDiv = document.getElementById("typing");
+const onlineDiv = document.getElementById("online");
 
-socket.emit("join", { username: name, dp });
+let user = localStorage.getItem("user");
+let room = localStorage.getItem("room");
 
-// SEND MESSAGE
-function send() {
-  const msg = document.getElementById("msg").value;
+socket.emit("login", user);
+socket.emit("joinRoom", { username: user, room });
 
-  socket.emit("message", {
-    name,
-    msg,
-    dp,
-    to
-  });
-
-  document.getElementById("msg").value = "";
+function scrollBottom(){
+  chat.scrollTop = chat.scrollHeight;
 }
 
-// RECEIVE MESSAGE
+function send(){
+  if(msg.value === "") return;
+
+  socket.emit("sendMessage", {
+    room,
+    user,
+    text: msg.value
+  });
+
+  msg.value = "";
+}
+
 socket.on("message", (data) => {
-
-  const isMe = data.name === name;
-
   const div = document.createElement("div");
-  div.className = isMe ? "me" : "other";
 
-  div.innerHTML = `
-    <div class="bubble">
-      <img src="${data.dp}" width="30">
-      ${data.msg}
-    </div>
-  `;
+  div.classList.add("message");
+  div.classList.add(data.user === user ? "sent" : "received");
 
-  const box = document.getElementById("messages");
-  box.appendChild(div);
+  div.innerHTML = `<b>${data.user}</b><br>${data.text}`;
 
-  box.scrollTop = box.scrollHeight;
+  chat.appendChild(div);
+  scrollBottom();
+
+  socket.emit("seen", { room, user });
 });
 
-// TYPING
-document.getElementById("msg").addEventListener("input", () => {
-  socket.emit("typing", to);
+msg.addEventListener("input", () => {
+  socket.emit("typing", { room, user });
 });
 
-socket.on("typing", (user) => {
-  document.getElementById("typing").innerText = user + " typing...";
-  setTimeout(() => {
-    document.getElementById("typing").innerText = "";
-  }, 1000);
+socket.on("typing", (u) => {
+  typingDiv.innerText = u + " typing...";
+  setTimeout(() => typingDiv.innerText = "", 2000);
 });
 
-// SEEN
-socket.on("seen", () => {
-  console.log("✔✔ Seen");
+socket.on("status", (msg) => {
+  const div = document.createElement("div");
+  div.innerHTML = `<i>${msg}</i>`;
+  chat.appendChild(div);
 });
 
-// ONLINE USERS
-socket.on("onlineUsers", (list) => {
-  console.log("Online:", list);
+socket.on("onlineUsers", (users) => {
+  onlineDiv.innerText = "Online: " + users.join(", ");
 });
