@@ -43,20 +43,31 @@
 
 <div id="chat"></div>
 
-<script src="/socket.io/socket.io.js"></script>
+<!-- 🔥 SOCKET FIX -->
+<script src="https://chat-app-6ih8.onrender.com/socket.io/socket.io.js"></script>
+
 <script>
-const socket = io();
+const socket = io("https://chat-app-6ih8.onrender.com");
 
 let username = "";
 
-// 🔥 JOIN
+// JOIN
 function join() {
   username = document.getElementById("username").value;
+
+  if (!username) {
+    alert("Enter username");
+    return;
+  }
+
   socket.emit("join", username);
+  alert("Joined as " + username);
 }
 
-// 💬 PRIVATE
+// PRIVATE
 function sendPrivate() {
+  if (!username) return alert("Join first!");
+
   const to = document.getElementById("toUser").value;
   const msg = document.getElementById("msg").value;
 
@@ -73,10 +84,13 @@ socket.on("private_message", (data) => {
   notify(data.message);
 });
 
-// 👥 GROUP
+// GROUP
 function joinRoom() {
+  if (!username) return alert("Join first!");
+
   const room = document.getElementById("room").value;
   socket.emit("join_room", room);
+  alert("Joined room " + room);
 }
 
 function sendGroup() {
@@ -160,8 +174,7 @@ function notify(msg) {
 
 // UI
 function addMsg(msg) {
-  const div = document.getElementById("chat");
-  div.innerHTML += "<p>" + msg + "</p>";
+  document.getElementById("chat").innerHTML += "<p>" + msg + "</p>";
 }
 </script>
 

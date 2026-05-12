@@ -2,12 +2,15 @@ const express = require("express");
 const http = require("http");
 const socketio = require("socket.io");
 const multer = require("multer");
-const path = require("path");
 
 const app = express();
 const server = http.createServer(app);
+
+// 🔥 IMPORTANT (Render fix)
 const io = socketio(server, {
-  cors: { origin: "*" }
+  cors: {
+    origin: "*"
+  }
 });
 
 app.use(express.static("public"));
@@ -30,10 +33,12 @@ app.post("/upload", upload.single("file"), (req, res) => {
 
 // 🔥 SOCKET
 io.on("connection", (socket) => {
+  console.log("User connected:", socket.id);
 
   socket.on("join", (username) => {
     users[username] = socket.id;
     socket.username = username;
+    console.log(username + " joined");
   });
 
   // 💬 PRIVATE
@@ -46,6 +51,7 @@ io.on("connection", (socket) => {
   // 👥 GROUP
   socket.on("join_room", (room) => {
     socket.join(room);
+    console.log(socket.username + " joined room " + room);
   });
 
   socket.on("group_message", ({ room, message, from }) => {
@@ -59,8 +65,14 @@ io.on("connection", (socket) => {
     }
   });
 
+  socket.on("disconnect", () => {
+    console.log("User disconnected");
+  });
 });
 
-server.listen(3001, () => {
-  console.log("🔥 Server running on port 3001");
+// 🔥 IMPORTANT PORT FIX
+const PORT = process.env.PORT || 3001;
+
+server.listen(PORT, () => {
+  console.log("🔥 Server running on port " + PORT);
 });
