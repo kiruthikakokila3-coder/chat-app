@@ -1,72 +1,66 @@
 const express = require("express");
+const http = require("http");
+const socketio = require("socket.io");
+const multer = require("multer");
+const path = require("path");
+
 const app = express();
-const http = require("http").createServer(app);
-const io = require("socket.io")(http);
-
-// ✅ public folder serve
-app.use(express.static("public"));
-
-// ✅ default route → index.html open ஆகும்
-app.get("/", (req, res) => {
-  res.sendFile(__dirname + "/public/index.html");
+const server = http.createServer(app);
+const io = socketio(server, {
+  cors: { origin: "*" }
 });
 
-// 👥 users store
+app.use(express.static("public"));
+app.use("/uploads", express.static("uploads"));
+
 let users = {};
 
+// 📎 FILE UPLOAD
+const storage = multer.diskStorage({
+  destination: "uploads/",
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + "-" + file.originalname);
+  }
+});
+const upload = multer({ storage });
+
+app.post("/upload", upload.single("file"), (req, res) => {
+  res.json({ file: req.file.filename });
+});
+
+// 🔥 SOCKET
 io.on("connection", (socket) => {
 
-  // 🔥 join room
-  socket.on("joinRoom", ({ username, room }) => {
-    socket.join(room);
-
-    users[socket.id] = { username, room };
-
-    socket.to(room).emit("message", {
-      user: "System",
-      text: `${username} joined 👋`
-    });
-
-    updateUsers(room);
+  socket.on("join", (username) => {
+    users[username] = socket.id;
+    socket.username = username;
   });
 
-  // 💬 message
-  socket.on("message", (data) => {
-    io.to(data.room).emit("message", data);
-  });
-
-  // 📸 image
-  socket.on("image", (data) => {
-    io.to(data.room).emit("image", data);
-  });
-
-  // ❌ disconnect
-  socket.on("disconnect", () => {
-    const user = users[socket.id];
-
-    if (user) {
-      socket.to(user.room).emit("message", {
-        user: "System",
-        text: `${user.username} left ❌`
-      });
-
-      delete users[socket.id];
-      updateUsers(user.room);
+  // 💬 PRIVATE
+  socket.on("private_message", ({ to, message, from }) => {
+    if (users[to]) {
+      io.to(users[to]).emit("private_message", { from, message });
     }
   });
 
-  // 🟢 update users list
-  function updateUsers(room) {
-    const roomUsers = Object.values(users)
-      .filter(u => u.room === room)
-      .map(u => u.username);
+  // 👥 GROUP
+  socket.on("join_room", (room) => {
+    socket.join(room);
+  });
 
-    io.to(room).emit("userList", roomUsers);
-  }
+  socket.on("group_message", ({ room, message, from }) => {
+    io.to(room).emit("group_message", { from, message });
+  });
+
+  // ✍️ TYPING
+  socket.on("typing", (to) => {
+    if (users[to]) {
+      io.to(users[to]).emit("typing", socket.username);
+    }
+  });
 
 });
 
-// 🚀 start server
-http.listen(3001, () => {
+server.listen(3001, () => {
   console.log("🔥 Server running on port 3001");
 });

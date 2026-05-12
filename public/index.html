@@ -1,82 +1,167 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>🔥 Chat App Login</title>
-
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<style>
-body {
-  margin:0;
-  font-family: Arial;
-  height:100vh;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  background: linear-gradient(135deg, #00c6ff, #0072ff);
-}
-
-#box {
-  background:white;
-  padding:30px;
-  border-radius:15px;
-  width:90%;
-  max-width:300px;
-  text-align:center;
-}
-
-h2 {
-  margin-bottom:20px;
-}
-
-input {
-  width:100%;
-  padding:12px;
-  margin:10px 0;
-  border-radius:8px;
-  border:1px solid #ccc;
-}
-
-button {
-  width:100%;
-  padding:12px;
-  border:none;
-  border-radius:8px;
-  background:#0072ff;
-  color:white;
-  font-size:16px;
-}
-
-button:hover {
-  background:#0055cc;
-}
-</style>
-
+  <title>Chat App</title>
 </head>
-
 <body>
 
-<div id="box">
-  <h2>💬 Chat App</h2>
+<h2>🔥 Chat App</h2>
 
-  <input id="username" placeholder="Enter your name">
-  <input id="room" placeholder="Enter room ID">
+<input id="username" placeholder="Your name">
+<button onclick="join()">Join</button>
 
-  <button onclick="join()">Join Chat</button>
-</div>
+<hr>
 
+<h3>Private Chat</h3>
+<input id="toUser" placeholder="Send to">
+<input id="msg" placeholder="Message" oninput="typing()">
+<button onclick="sendPrivate()">Send</button>
+
+<p id="typing"></p>
+
+<hr>
+
+<h3>Group Chat</h3>
+<input id="room" placeholder="Room name">
+<button onclick="joinRoom()">Join Room</button>
+<input id="groupMsg" placeholder="Message">
+<button onclick="sendGroup()">Send</button>
+
+<hr>
+
+<h3>File Upload</h3>
+<input type="file" id="file">
+<button onclick="uploadFile()">Upload</button>
+
+<hr>
+
+<h3>Voice</h3>
+<button onclick="startRecord()">Start</button>
+<button onclick="stopRecord()">Stop</button>
+
+<hr>
+
+<div id="chat"></div>
+
+<script src="/socket.io/socket.io.js"></script>
 <script>
+const socket = io();
+
+let username = "";
+
+// 🔥 JOIN
 function join() {
-  const username = document.getElementById("username").value;
+  username = document.getElementById("username").value;
+  socket.emit("join", username);
+}
+
+// 💬 PRIVATE
+function sendPrivate() {
+  const to = document.getElementById("toUser").value;
+  const msg = document.getElementById("msg").value;
+
+  socket.emit("private_message", {
+    to,
+    message: msg,
+    from: username
+  });
+}
+
+// RECEIVE
+socket.on("private_message", (data) => {
+  addMsg(data.from + ": " + data.message);
+  notify(data.message);
+});
+
+// 👥 GROUP
+function joinRoom() {
   const room = document.getElementById("room").value;
+  socket.emit("join_room", room);
+}
 
-  if(!username || !room){
-    alert("Enter details!");
-    return;
-  }
+function sendGroup() {
+  const room = document.getElementById("room").value;
+  const msg = document.getElementById("groupMsg").value;
 
-  // redirect to chat page
-  window.location.href = `chat.html?username=${username}&room=${room}`;
+  socket.emit("group_message", {
+    room,
+    message: msg,
+    from: username
+  });
+}
+
+socket.on("group_message", (data) => {
+  addMsg("[GROUP] " + data.from + ": " + data.message);
+});
+
+// ✍️ TYPING
+function typing() {
+  const to = document.getElementById("toUser").value;
+  socket.emit("typing", to);
+}
+
+socket.on("typing", (user) => {
+  document.getElementById("typing").innerText = user + " typing...";
+  setTimeout(() => {
+    document.getElementById("typing").innerText = "";
+  }, 2000);
+});
+
+// 📎 FILE
+function uploadFile() {
+  const file = document.getElementById("file").files[0];
+  const formData = new FormData();
+  formData.append("file", file);
+
+  fetch("/upload", {
+    method: "POST",
+    body: formData
+  })
+  .then(res => res.json())
+  .then(data => {
+    addMsg("File: " + data.file);
+  });
+}
+
+// 🎤 VOICE
+let recorder, chunks = [];
+
+navigator.mediaDevices.getUserMedia({ audio: true })
+.then(stream => {
+  recorder = new MediaRecorder(stream);
+
+  recorder.ondataavailable = e => chunks.push(e.data);
+
+  recorder.onstop = () => {
+    const blob = new Blob(chunks);
+    const url = URL.createObjectURL(blob);
+    const audio = new Audio(url);
+    audio.play();
+  };
+});
+
+function startRecord() {
+  chunks = [];
+  recorder.start();
+}
+
+function stopRecord() {
+  recorder.stop();
+}
+
+// 🔔 NOTIFICATION
+if (Notification.permission !== "granted") {
+  Notification.requestPermission();
+}
+
+function notify(msg) {
+  new Notification("New Message", { body: msg });
+}
+
+// UI
+function addMsg(msg) {
+  const div = document.getElementById("chat");
+  div.innerHTML += "<p>" + msg + "</p>";
 }
 </script>
 
