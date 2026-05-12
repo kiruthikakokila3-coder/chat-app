@@ -1,182 +1,29 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Chat App</title>
+  <title>Pro Chat</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<h2>🔥 Chat App</h2>
+<div id="sidebar">
+  <h3>Users</h3>
+  <input id="username" placeholder="Your name">
+  <button onclick="join()">Join</button>
+  <div id="users"></div>
+</div>
 
-<input id="username" placeholder="Your name">
-<button onclick="join()">Join</button>
+<div id="chatArea">
+  <h3 id="chatTitle">Select User</h3>
 
-<hr>
+  <div id="messages"></div>
 
-<h3>Private Chat</h3>
-<input id="toUser" placeholder="Send to">
-<input id="msg" placeholder="Message" oninput="typing()">
-<button onclick="sendPrivate()">Send</button>
+  <input id="msg" placeholder="Type message">
+  <button onclick="sendMsg()">Send</button>
+</div>
 
-<p id="typing"></p>
-
-<hr>
-
-<h3>Group Chat</h3>
-<input id="room" placeholder="Room name">
-<button onclick="joinRoom()">Join Room</button>
-<input id="groupMsg" placeholder="Message">
-<button onclick="sendGroup()">Send</button>
-
-<hr>
-
-<h3>File Upload</h3>
-<input type="file" id="file">
-<button onclick="uploadFile()">Upload</button>
-
-<hr>
-
-<h3>Voice</h3>
-<button onclick="startRecord()">Start</button>
-<button onclick="stopRecord()">Stop</button>
-
-<hr>
-
-<div id="chat"></div>
-
-<!-- 🔥 SOCKET FIX -->
 <script src="https://chat-app-6ih8.onrender.com/socket.io/socket.io.js"></script>
-
-<script>
-const socket = io("https://chat-app-6ih8.onrender.com");
-
-let username = "";
-
-// JOIN
-function join() {
-  username = document.getElementById("username").value;
-
-  if (!username) {
-    alert("Enter username");
-    return;
-  }
-
-  socket.emit("join", username);
-  alert("Joined as " + username);
-}
-
-// PRIVATE
-function sendPrivate() {
-  if (!username) return alert("Join first!");
-
-  const to = document.getElementById("toUser").value;
-  const msg = document.getElementById("msg").value;
-
-  socket.emit("private_message", {
-    to,
-    message: msg,
-    from: username
-  });
-}
-
-// RECEIVE
-socket.on("private_message", (data) => {
-  addMsg(data.from + ": " + data.message);
-  notify(data.message);
-});
-
-// GROUP
-function joinRoom() {
-  if (!username) return alert("Join first!");
-
-  const room = document.getElementById("room").value;
-  socket.emit("join_room", room);
-  alert("Joined room " + room);
-}
-
-function sendGroup() {
-  const room = document.getElementById("room").value;
-  const msg = document.getElementById("groupMsg").value;
-
-  socket.emit("group_message", {
-    room,
-    message: msg,
-    from: username
-  });
-}
-
-socket.on("group_message", (data) => {
-  addMsg("[GROUP] " + data.from + ": " + data.message);
-});
-
-// ✍️ TYPING
-function typing() {
-  const to = document.getElementById("toUser").value;
-  socket.emit("typing", to);
-}
-
-socket.on("typing", (user) => {
-  document.getElementById("typing").innerText = user + " typing...";
-  setTimeout(() => {
-    document.getElementById("typing").innerText = "";
-  }, 2000);
-});
-
-// 📎 FILE
-function uploadFile() {
-  const file = document.getElementById("file").files[0];
-  const formData = new FormData();
-  formData.append("file", file);
-
-  fetch("/upload", {
-    method: "POST",
-    body: formData
-  })
-  .then(res => res.json())
-  .then(data => {
-    addMsg("File: " + data.file);
-  });
-}
-
-// 🎤 VOICE
-let recorder, chunks = [];
-
-navigator.mediaDevices.getUserMedia({ audio: true })
-.then(stream => {
-  recorder = new MediaRecorder(stream);
-
-  recorder.ondataavailable = e => chunks.push(e.data);
-
-  recorder.onstop = () => {
-    const blob = new Blob(chunks);
-    const url = URL.createObjectURL(blob);
-    const audio = new Audio(url);
-    audio.play();
-  };
-});
-
-function startRecord() {
-  chunks = [];
-  recorder.start();
-}
-
-function stopRecord() {
-  recorder.stop();
-}
-
-// 🔔 NOTIFICATION
-if (Notification.permission !== "granted") {
-  Notification.requestPermission();
-}
-
-function notify(msg) {
-  new Notification("New Message", { body: msg });
-}
-
-// UI
-function addMsg(msg) {
-  document.getElementById("chat").innerHTML += "<p>" + msg + "</p>";
-}
-</script>
+<script src="script.js"></script>
 
 </body>
 </html>

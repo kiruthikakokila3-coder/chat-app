@@ -6,17 +6,19 @@ const multer = require("multer");
 const app = express();
 const server = http.createServer(app);
 
-// 🔥 IMPORTANT (Render fix)
+// 🔥 SOCKET SETUP (Render fix)
 const io = socketio(server, {
   cors: {
     origin: "*"
   }
 });
 
+// 📁 STATIC
 app.use(express.static("public"));
 app.use("/uploads", express.static("uploads"));
 
-let users = {};
+// 👥 USERS STORE
+let users = {}; // { username: socketId }
 
 // 📎 FILE UPLOAD
 const storage = multer.diskStorage({
@@ -31,31 +33,32 @@ app.post("/upload", upload.single("file"), (req, res) => {
   res.json({ file: req.file.filename });
 });
 
-// 🔥 SOCKET
+// 🔥 SOCKET CONNECTION
 io.on("connection", (socket) => {
-  console.log("User connected:", socket.id);
+  console.log("🟢 User connected:", socket.id);
 
+  // 👤 JOIN
   socket.on("join", (username) => {
     users[username] = socket.id;
     socket.username = username;
+
     console.log(username + " joined");
+
+    // 🔥 send users list to everyone
+    io.emit("users_list", Object.keys(users));
+
+    // 🔔 notify others
+    socket.broadcast.emit("user_joined", username);
   });
 
-  // 💬 PRIVATE
+  // 💬 PRIVATE MESSAGE
   socket.on("private_message", ({ to, message, from }) => {
     if (users[to]) {
-      io.to(users[to]).emit("private_message", { from, message });
+      io.to(users[to]).emit("private_message", {
+        from,
+        message
+      });
     }
-  });
-
-  // 👥 GROUP
-  socket.on("join_room", (room) => {
-    socket.join(room);
-    console.log(socket.username + " joined room " + room);
-  });
-
-  socket.on("group_message", ({ room, message, from }) => {
-    io.to(room).emit("group_message", { from, message });
   });
 
   // ✍️ TYPING
@@ -65,12 +68,36 @@ io.on("connection", (socket) => {
     }
   });
 
+  // 👥 GROUP CHAT
+  socket.on("join_room", (room) => {
+    socket.join(room);
+    console.log(socket.username + " joined room " + room);
+  });
+
+  socket.on("group_message", ({ room, message, from }) => {
+    io.to(room).emit("group_message", {
+      from,
+      message
+    });
+  });
+
+  // ❌ DISCONNECT
   socket.on("disconnect", () => {
-    console.log("User disconnected");
+    console.log("🔴 User disconnected:", socket.id);
+
+    if (socket.username) {
+      delete users[socket.username];
+
+      // 🔥 update users list
+      io.emit("users_list", Object.keys(users));
+
+      // 🔔 notify others
+      io.emit("user_left", socket.username);
+    }
   });
 });
 
-// 🔥 IMPORTANT PORT FIX
+// 🔥 PORT FIX
 const PORT = process.env.PORT || 3001;
 
 server.listen(PORT, () => {
