@@ -11,7 +11,6 @@
   <input type="file" id="fileInput" accept="image/*,audio/*">
   <button onclick="sendFile()">📎</button>
   <button id="recordBtn">🎤 Record</button>
-
   <emoji-picker></emoji-picker>
 
   <script src="/socket.io/socket.io.js"></script>
@@ -20,14 +19,42 @@
 
     const socket = io();
     const username = localStorage.getItem("username");
+    const dp = localStorage.getItem("dp");
     const room = localStorage.getItem("room");
 
-    socket.emit("login", { username });
+    socket.emit("login", { username, dp });
     socket.emit("joinRoom", room);
 
     socket.on("message", (data) => {
       const div = document.createElement("div");
-      div.textContent = `${data.user}: ${data.text} (${data.time})`;
+      div.innerHTML = `<img src="${data.dp}" class="dp"> <b>${data.user}</b>: ${data.text} <span>${data.time}</span>`;
+      div.id = "msg-" + data.id;
+      document.getElementById("chat-box").appendChild(div);
+      // mark as seen
+      socket.emit("seenMessage", { room, msgId: data.id });
+    });
+
+    socket.on("updateSeen", (msg) => {
+      const div = document.getElementById("msg-" + msg.id);
+      if (div) {
+        div.innerHTML += ` <span>✓✓ Seen by ${msg.seenBy.join(", ")}</span>`;
+      }
+    });
+
+    socket.on("deleteMessage", (msgId) => {
+      const div = document.getElementById("msg-" + msgId);
+      if (div) div.remove();
+    });
+
+    socket.on("userStatus", (data) => {
+      const div = document.createElement("div");
+      div.textContent = `${data.user} is ${data.status}`;
+      document.getElementById("chat-box").appendChild(div);
+    });
+
+    socket.on("notification", (msg) => {
+      const div = document.createElement("div");
+      div.textContent = msg;
       document.getElementById("chat-box").appendChild(div);
     });
 

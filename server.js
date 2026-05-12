@@ -12,6 +12,8 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 let users = {};
+let messages = {}; // store messages per room
+
 const upload = multer({ dest: "uploads/" });
 
 app.post("/upload", upload.single("file"), (req, res) => {
@@ -19,31 +21,53 @@ app.post("/upload", upload.single("file"), (req, res) => {
 });
 
 io.on("connection", (socket) => {
-  socket.on("login", ({ username }) => {
-    users[socket.id] = username;
+  socket.on("login", ({ username, dp }) => {
+    if (!username) username = "Guest-" + socket.id.slice(0,4);
+    users[socket.id] = { username, dp, status: "online" };
     io.emit("userStatus", { user: username, status: "online" });
   });
 
   socket.on("joinRoom", (room) => {
     socket.join(room);
-    io.to(room).emit("notification", `${users[socket.id]} joined ${room}`);
+    if (!messages[room]) messages[room] = [];
+    io.to(room).emit("notification", `${users[socket.id].username} joined ${room}`);
   });
 
   socket.on("chatMessage", ({ room, msg }) => {
-    io.to(room).emit("message", {
-      user: users[socket.id],
+    const message = {
+      id: Date.now(),
+      user: users[socket.id].username,
+      dp: users[socket.id].dp,
       text: msg,
-      time: new Date().toLocaleTimeString()
-    });
+      time: new Date().toLocaleTimeString(),
+      seenBy: []
+    };
+    messages[room].push(message);
+    io.to(room).emit("message", message);
   });
 
   socket.on("typing", (room) => {
-    socket.to(room).emit("typing", users[socket.id]);
+    socket.to(room).emit("typing", users[socket.id].username);
+  });
+
+  socket.on("seenMessage", ({ room, msgId }) => {
+    const msg = messages[room].find(m => m.id === msgId);
+    if (msg && !msg.seenBy.includes(users[socket.id].username)) {
+      msg.seenBy.push(users[socket.id].username);
+      io.to(room).emit("updateSeen", msg);
+    }
+  });
+
+  socket.on("deleteMessage", ({ room, msgId }) => {
+    messages[room] = messages[room].filter(m => m.id !== msgId);
+    io.to(room).emit("deleteMessage", msgId);
   });
 
   socket.on("disconnect", () => {
-    io.emit("userStatus", { user: users[socket.id], status: "offline" });
-    delete users[socket.id];
+    if (users[socket.id]) {
+      io.emit("userStatus", { user: users[socket.id].username, status: "offline" });
+      delete users[socket.id];
+    }
   });
 });
 

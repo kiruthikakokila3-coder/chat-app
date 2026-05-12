@@ -8,13 +8,26 @@
   <div class="login-box">
     <h2>Login</h2>
     <input id="username" placeholder="Username">
+    <input type="file" id="dpInput" accept="image/*">
     <button onclick="login()">Login</button>
   </div>
   <script>
     function login() {
       const name = document.getElementById("username").value;
-      localStorage.setItem("username", name);
-      window.location.href = "select.html";
+      const dpFile = document.getElementById("dpInput").files[0];
+      if (dpFile) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          localStorage.setItem("dp", reader.result);
+          localStorage.setItem("username", name);
+          window.location.href = "select.html";
+        };
+        reader.readAsDataURL(dpFile);
+      } else {
+        localStorage.setItem("username", name);
+        localStorage.setItem("dp", "");
+        window.location.href = "select.html";
+      }
     }
   </script>
 </body>
