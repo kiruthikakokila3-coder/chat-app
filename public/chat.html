@@ -1,16 +1,20 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Chat</title>
+  <title>Chat</title>
+  <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
-<h2>Chat Room</h2>
+<h2>💬 Chat Room</h2>
 
 <div id="messages"></div>
 
-<input id="msg">
-<button onclick="send()">Send</button>
+<div id="bottom">
+  <input id="msg" placeholder="Type message...">
+  <button onclick="send()">➤</button>
+</div>
 
 <script src="/socket.io/socket.io.js"></script>
 <script src="chat.js"></script>
