@@ -1,55 +1,40 @@
 const express = require("express");
 const http = require("http");
-const socketIo = require("socket.io");
-const multer = require("multer");
-const path = require("path");
+const { Server } = require("socket.io");
+const mongoose = require("mongoose");
+const cors = require("cors");
+
+require("dotenv").config();
 
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server);
+const io = new Server(server, {
+  cors: { origin: "*" },
+});
 
+// 🔥 MIDDLEWARE
+app.use(cors());
+app.use(express.json());
 app.use(express.static("public"));
+app.use("/uploads", express.static("uploads"));
 
-/* 📷 Upload */
-const storage = multer.diskStorage({
-  destination: "public/uploads",
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname));
-  }
-});
-const upload = multer({ storage });
+// 🔥 ROUTES
+app.use("/api/auth", require("./routes/auth"));
+app.use("/api/users", require("./routes/users"));
+app.use("/api/messages", require("./routes/messages"));
+app.use("/api/groups", require("./routes/groups"));
+app.use("/api/upload", require("./routes/upload"));
+app.use("/api/ai", require("./routes/ai"));
 
-app.post("/upload", upload.single("file"), (req, res) => {
-  res.json({ url: "/uploads/" + req.file.filename });
-});
+// 🔥 SOCKET
+require("./sockets/socket")(io);
 
-/* 👥 Users */
-let users = {};
+// 🔥 DB CONNECT
+mongoose.connect(process.env.MONGO_URI)
+.then(() => console.log("MongoDB Connected"))
+.catch(err => console.log(err));
 
-io.on("connection", (socket) => {
-
-  socket.on("login", (user) => {
-    users[socket.id] = user;
-    io.emit("online", Object.values(users));
-  });
-
-  socket.on("join", (room) => {
-    socket.join(room);
-  });
-
-  socket.on("msg", (data) => {
-    io.to(data.room).emit("msg", data);
-  });
-
-  socket.on("typing", (user) => {
-    socket.broadcast.emit("typing", user);
-  });
-
-  socket.on("disconnect", () => {
-    delete users[socket.id];
-    io.emit("online", Object.values(users));
-  });
-
-});
-
-server.listen(3000);
+// 🚀 START
+server.listen(3000, () =>
+  console.log("🔥 Server running http://localhost:3000")
+);

@@ -1,34 +1,22 @@
-body{
-  margin:0;
-  background:#111;
-  color:white;
-  font-family:Arial;
+body {
+  font-family: Arial;
+  background: #111;
+  color: white;
+  text-align: center;
 }
 
-#chat{
-  height:80vh;
-  overflow:auto;
-  padding:10px;
+.chat-box {
+  width: 300px;
+  margin: auto;
+  margin-top: 50px;
+  background: #222;
+  padding: 20px;
+  border-radius: 10px;
 }
 
-.msg{
-  padding:10px;
-  margin:5px;
-  border-radius:10px;
-  max-width:70%;
-}
-
-.me{
-  background:#25d366;
-  margin-left:auto;
-}
-
-.other{
-  background:#333;
-}
-
-@media(max-width:600px){
-  .msg{
-    max-width:85%;
-  }
+#messages {
+  height: 200px;
+  overflow-y: scroll;
+  border: 1px solid gray;
+  margin-bottom: 10px;
 }
