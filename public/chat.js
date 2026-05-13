@@ -1,59 +1,26 @@
-const socket = io("https://chat-app-6ih8.onrender.com");
+const socket = io();
 
 const user = localStorage.getItem("user");
-const room = localStorage.getItem("room");
-
-const messagesDiv = document.getElementById("messages");
-const msgInput = document.getElementById("msg");
+const room = "global";
 
 socket.emit("joinRoom", room);
 
-// LOAD OLD MESSAGES
-async function loadMessages() {
-    const res = await fetch("/api/messages/" + room);
-    const data = await res.json();
-
-    data.forEach(showMessage);
-}
-
-loadMessages();
-
 function send() {
-    const text = msgInput.value.trim();
-    if (!text) return;
+  const text = msg.value;
 
-    const data = { user, text, room };
+  const data = { sender: user, text, room };
 
-    socket.emit("chatMessage", data);
+  socket.emit("sendMessage", data);
 
-    fetch("/api/messages", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
-    });
+  fetch("/api/messages", {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify(data)
+  });
 
-    msgInput.value = "";
+  msg.value = "";
 }
 
-socket.on("message", (data) => {
-    showMessage(data);
+socket.on("newMessage", (data) => {
+  messages.innerHTML += `<p><b>${data.sender}</b>: ${data.text}</p>`;
 });
-
-function showMessage(data) {
-    const div = document.createElement("div");
-
-    div.classList.add("message");
-
-    if (data.user === user) {
-        div.classList.add("me");
-    } else {
-        div.classList.add("other");
-    }
-
-    div.innerHTML = `<b>${data.user}</b><br>${data.text}`;
-
-    messagesDiv.appendChild(div);
-
-    // auto scroll
-    messagesDiv.scrollTop = messagesDiv.scrollHeight;
-}

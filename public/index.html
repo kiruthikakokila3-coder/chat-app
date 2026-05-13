@@ -1,21 +1,31 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <title>Chat App</title>
-</head>
 <body>
 
-<h2>Join Chat</h2>
+<h2>Login</h2>
 
-<input id="username" placeholder="Enter name">
-<input id="room" placeholder="Room">
-<button onclick="join()">Join</button>
+<input id="user" placeholder="username">
+<input id="pass" type="password" placeholder="password">
+
+<button onclick="login()">Login</button>
 
 <script>
-function join() {
-    localStorage.setItem("user", username.value);
-    localStorage.setItem("room", room.value);
-    window.location = "chat.html";
+async function login() {
+  const res = await fetch("/api/auth/login", {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({
+      username: user.value,
+      password: pass.value
+    })
+  });
+
+  const data = await res.json();
+
+  localStorage.setItem("token", data.token);
+  localStorage.setItem("user", data.username);
+
+  window.location = "chat.html";
 }
 </script>
 
