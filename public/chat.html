@@ -1,4 +1,5 @@
 <script src="/socket.io/socket.io.js"></script>
+<link rel="stylesheet" href="style.css">
 
 <h2>Public Chat</h2>
 
@@ -10,11 +11,19 @@
 <script>
 const socket = io();
 
-function send() {
-  socket.emit("public message", msg.value);
+function send(){
+ add(msg.value,true);
+ socket.emit("public", msg.value);
 }
 
-socket.on("public message", (m) => {
-  chat.innerHTML += "<p>" + m + "</p>";
+socket.on("public",(m)=>{
+ add(m,false);
 });
+
+function add(m,me){
+ let d=document.createElement("div");
+ d.className="msg "+(me?"right":"left");
+ d.innerText=m;
+ chat.appendChild(d);
+}
 </script>

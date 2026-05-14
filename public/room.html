@@ -1,8 +1,9 @@
 <script src="/socket.io/socket.io.js"></script>
+<link rel="stylesheet" href="style.css">
 
 <h2>Private Chat</h2>
 
-<input id="room" placeholder="room name">
+<input id="room" placeholder="Room name">
 <button onclick="join()">Join</button>
 
 <input id="msg">
@@ -11,22 +12,27 @@
 <div id="chat"></div>
 
 <script>
-const socket = io();
-let currentRoom = "";
+const socket=io();
+let r="";
 
-function join() {
-  currentRoom = room.value;
-  socket.emit("join private", currentRoom);
+function join(){
+ r=room.value;
+ socket.emit("join",r);
 }
 
-function send() {
-  socket.emit("private message", {
-    room: currentRoom,
-    msg: msg.value
-  });
+function send(){
+ add(msg.value,true);
+ socket.emit("private",{room:r,msg:msg.value});
 }
 
-socket.on("private message", (m) => {
-  chat.innerHTML += "<p>" + m + "</p>";
+socket.on("private",(m)=>{
+ add(m,false);
 });
+
+function add(m,me){
+ let d=document.createElement("div");
+ d.className="msg "+(me?"right":"left");
+ d.innerText=m;
+ chat.appendChild(d);
+}
 </script>

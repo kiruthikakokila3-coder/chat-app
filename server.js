@@ -8,17 +8,18 @@ const io = new Server(server);
 
 app.use(express.static("public"));
 
-// Dummy login users
-const users = {
-  user1: "123",
-  user2: "123"
-};
+let users = {}; // dynamic users
 
-// LOGIN API
+// LOGIN
 app.get("/login", (req, res) => {
   const { username, password } = req.query;
 
-  if (users[username] && users[username] === password) {
+  if (!users[username]) {
+    users[username] = password;
+    return res.json({ success: true });
+  }
+
+  if (users[username] === password) {
     res.json({ success: true });
   } else {
     res.json({ success: false });
@@ -28,22 +29,21 @@ app.get("/login", (req, res) => {
 io.on("connection", (socket) => {
 
   // PUBLIC CHAT
-  socket.on("public message", (msg) => {
-    io.emit("public message", msg);
+  socket.on("public", (msg) => {
+    io.emit("public", msg);
   });
 
-  // JOIN PRIVATE ROOM
-  socket.on("join private", (room) => {
+  // JOIN ROOM
+  socket.on("join", (room) => {
     socket.join(room);
   });
 
   // PRIVATE CHAT
-  socket.on("private message", ({ room, msg }) => {
-    socket.to(room).emit("private message", msg);
+  socket.on("private", ({ room, msg }) => {
+    socket.to(room).emit("private", msg);
   });
 
 });
 
-server.listen(3000, () => {
-  console.log("Server running on 3000");
-});
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => console.log("Running on " + PORT));

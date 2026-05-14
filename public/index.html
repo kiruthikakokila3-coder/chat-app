@@ -1,13 +1,17 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Love Chat</title>
+<title>Love App</title>
+<link rel="stylesheet" href="style.css">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
+
 <body>
 
-<h2>Login</h2>
-<input id="user" placeholder="username">
-<input id="pass" placeholder="password">
+<h2>💖 Love App Login</h2>
+
+<input id="u" placeholder="Username">
+<input id="p" placeholder="Password">
 <button onclick="login()">Login</button>
 
 <div id="menu" style="display:none;">
@@ -20,23 +24,20 @@
 </div>
 
 <script>
-function login() {
-  let u = user.value;
-  let p = pass.value;
-
-  fetch(`/login?username=${u}&password=${p}`)
-    .then(res => res.json())
-    .then(data => {
-      if (data.success) {
-        menu.style.display = "block";
-      } else {
-        alert("Wrong login");
-      }
-    });
+function login(){
+ fetch(`/login?username=${u.value}&password=${p.value}`)
+ .then(r=>r.json())
+ .then(d=>{
+   if(d.success){
+     menu.style.display="block";
+   }else{
+     alert("Wrong login");
+   }
+ });
 }
 
-function go(page) {
-  window.location = page;
+function go(p){
+ location=p;
 }
 </script>
 
