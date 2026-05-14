@@ -1,25 +1,116 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Chat</title>
-<link rel="stylesheet" href="style.css">
+  <title>Chat App</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<div class="chat-header">
-  <h3>Chat Room</h3>
+<!-- 🔝 TOP BAR -->
+<div class="top">
+  <span id="online">🟢 0 online</span>
+  <span id="status">Online</span>
+  <button onclick="exit()">Exit</button>
 </div>
 
-<div id="messages" class="messages"></div>
-<div id="typing"></div>
+<!-- 💬 CHAT BOX -->
+<div id="chat-box"></div>
 
-<div class="input-box">
-  <input id="msg" placeholder="Type...">
+<!-- ✍️ INPUT AREA -->
+<div class="input-area">
+  <input id="msg" placeholder="Type message..." oninput="typing()">
   <button onclick="send()">Send</button>
 </div>
 
+<!-- ⚡ SOCKET -->
 <script src="/socket.io/socket.io.js"></script>
-<script src="client.js"></script>
+
+<script>
+const socket = io();
+
+const user = localStorage.getItem("username");
+
+// ❌ login illa na back
+if(!user){
+  window.location = "index.html";
+}
+
+// 👋 join
+socket.emit("join", user);
+
+// 💬 SEND MESSAGE
+function send(){
+  const input = document.getElementById("msg");
+  const msg = input.value;
+
+  if(!msg) return;
+
+  socket.emit("msg", {
+    user: user,
+    text: msg
+  });
+
+  input.value = "";
+}
+
+// 📩 RECEIVE MESSAGE
+socket.on("msg", (data)=>{
+  const box = document.getElementById("chat-box");
+
+  const div = document.createElement("div");
+
+  if(data.user === user){
+    div.className = "msg-right";
+  }else{
+    div.className = "msg-left";
+  }
+
+  div.innerHTML = `<b>${data.user}</b><br>${data.text} ✔✔`;
+
+  box.appendChild(div);
+
+  box.scrollTop = box.scrollHeight;
+});
+
+// ✍️ TYPING
+function typing(){
+  socket.emit("typing", user);
+}
+
+socket.on("typing", (msg)=>{
+  document.getElementById("status").innerText = msg;
+
+  setTimeout(()=>{
+    document.getElementById("status").innerText = "Online";
+  },2000);
+});
+
+// 🟢 ONLINE COUNT
+socket.on("online", (count)=>{
+  document.getElementById("online").innerText =
+  "🟢 " + count + " online";
+});
+
+// 🚪 EXIT
+function exit(){
+  localStorage.clear();
+  window.location = "index.html";
+}
+
+// ❤️ FLOATING HEARTS
+setInterval(()=>{
+  const heart = document.createElement("div");
+  heart.className = "heart";
+  heart.innerText = "❤️";
+
+  heart.style.left = Math.random()*100 + "vw";
+
+  document.body.appendChild(heart);
+
+  setTimeout(()=>heart.remove(),5000);
+},1200);
+
+</script>
 
 </body>
 </html>

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Select Room</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h2>Select Chat Type</h2>
+
+<button onclick="goPublic()">🌍 Public</button>
+<button onclick="goPrivate()">🔒 Private</button>
+
+<br><br>
+
+<button onclick="goLove()">❤️ Love Test</button>
+<button onclick="goBooks()">📚 Books</button>
+
+<script>
+function goPublic(){
+  localStorage.setItem("room","public");
+  window.location = "chat.html";
+}
+
+function goPrivate(){
+  localStorage.setItem("room","private");
+  window.location = "chat.html";
+}
+
+function goLove(){
+  window.location = "love.html";
+}
+
+function goBooks(){
+  window.location = "books.html";
+}
+</script>
+
+</body>
+</html>

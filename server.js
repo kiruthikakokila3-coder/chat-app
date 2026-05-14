@@ -1,62 +1,48 @@
 const express = require("express");
+const http = require("http");
+const { Server } = require("socket.io");
 const mongoose = require("mongoose");
+
 const app = express();
-const http = require("http").createServer(app);
-const io = require("socket.io")(http);
+const server = http.createServer(app);
+const io = new Server(server);
 
-const Message = require("./models/Message");
+// MongoDB
+mongoose.connect("mongodb://127.0.0.1:27017/chat");
 
+// Schema
+const Msg = mongoose.model("Msg", {
+  user: String,
+  text: String
+});
+
+// static
 app.use(express.static("public"));
 
-// 🔥 MongoDB connect
-mongoose.connect("mongodb://127.0.0.1:27017/chatDB")
-.then(()=>console.log("MongoDB Connected"))
-.catch(err=>console.log(err));
-
-let users = {};
+// users
+let users = [];
 
 io.on("connection", (socket) => {
 
-  socket.on("join", async ({ username, room }) => {
-    socket.join(room);
-    users[socket.id] = username;
-
-    // load old messages
-    const oldMsgs = await Message.find({ room });
-    socket.emit("oldMessages", oldMsgs);
-
-    io.to(room).emit("message", {
-      user: "System",
-      text: username + " joined",
-      time: new Date().toLocaleTimeString()
-    });
+  socket.on("join", (user) => {
+    users.push(user);
+    io.emit("online", users.length);
   });
 
-  socket.on("typing", (room) => {
-    socket.to(room).emit("typing", users[socket.id]);
+  socket.on("msg", async (data) => {
+    await Msg.create(data);
+    io.emit("msg", data);
   });
 
-  socket.on("sendMessage", async ({ message, room }) => {
-
-    const msgData = {
-      user: users[socket.id],
-      text: message,
-      room,
-      time: new Date().toLocaleTimeString()
-    };
-
-    // save DB
-    await Message.create(msgData);
-
-    io.to(room).emit("message", msgData);
+  socket.on("typing", (name)=>{
+    socket.broadcast.emit("typing", name + " typing...");
   });
 
-  socket.on("seen", (room) => {
-    socket.to(room).emit("seen", users[socket.id]);
+  socket.on("disconnect", ()=>{
+    users.pop();
+    io.emit("online", users.length);
   });
 
 });
 
-http.listen(3000, () => {
-  console.log("🔥 Server running http://localhost:3000");
-});
+server.listen(3000, ()=>console.log("Server running"));

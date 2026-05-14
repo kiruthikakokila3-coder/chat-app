@@ -1,56 +1,40 @@
 const socket = io();
 
-const username = localStorage.getItem("username");
-const img = localStorage.getItem("img");
-const room = "public";
+const user = localStorage.getItem("username");
 
-socket.emit("join", { username, room });
+socket.emit("join", user);
 
-// old msgs
-socket.on("oldMessages", (msgs) => {
-  msgs.forEach(addMsg);
+// send msg
+function send(){
+  const msg = document.getElementById("msg").value;
+
+  socket.emit("msg", {
+    user,
+    text: msg
+  });
+}
+
+// receive msg
+socket.on("msg", (data)=>{
+  const box = document.getElementById("chat-box");
+
+  const div = document.createElement("div");
+  div.innerHTML = `<b>${data.user}</b>: ${data.text} ✔✔`;
+
+  box.appendChild(div);
 });
 
 // typing
-msg.oninput = () => {
-  socket.emit("typing", room);
-};
-
-socket.on("typing", (user) => {
-  typing.innerText = user + " typing...";
-  setTimeout(()=>typing.innerText="", 2000);
-});
-
-function send(){
-  socket.emit("sendMessage", {
-    message: msg.value,
-    room
-  });
-
-  socket.emit("seen", room);
-
-  msg.value = "";
+function typing(){
+  socket.emit("typing", user);
 }
 
-// seen
-socket.on("seen", (user)=>{
-  console.log(user + " seen");
+socket.on("typing", (data)=>{
+  document.getElementById("status").innerText = data;
 });
 
-// new msg
-socket.on("message", (data) => {
-  addMsg(data);
+// online
+socket.on("online", (count)=>{
+  document.getElementById("online").innerText =
+  "🟢 "+count+" online";
 });
-
-function addMsg(data){
-  const div = document.createElement("div");
-  div.className = "msg";
-
-  div.innerHTML = `
-    <b>${data.user}</b><br>
-    ${data.text}
-    <div class="time">${data.time}</div>
-  `;
-
-  messages.appendChild(div);
-}
