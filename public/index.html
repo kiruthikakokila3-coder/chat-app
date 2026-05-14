@@ -1,70 +1,42 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Love Chat Login</title>
-<style>
-body{
-  background: linear-gradient(to right, #ff758c, #ff7eb3);
-  text-align:center;
-  font-family:sans-serif;
-  color:white;
-}
-
-.container{
-  margin-top:100px;
-}
-
-input{
-  padding:10px;
-  border:none;
-  border-radius:20px;
-  width:200px;
-}
-
-button{
-  padding:10px 20px;
-  border:none;
-  border-radius:20px;
-  background:red;
-  color:white;
-  cursor:pointer;
-}
-
-.heart{
-  font-size:50px;
-  animation: beat 1s infinite;
-}
-
-@keyframes beat{
-  0%{transform:scale(1);}
-  50%{transform:scale(1.2);}
-  100%{transform:scale(1);}
-}
-</style>
+<title>Love Chat</title>
 </head>
-
 <body>
 
-<div class="container">
-  <div class="heart">❤️</div>
-  <h1>Love Chat</h1>
+<h2>Login</h2>
+<input id="user" placeholder="username">
+<input id="pass" placeholder="password">
+<button onclick="login()">Login</button>
 
-  <input id="name" placeholder="Enter your name">
-  <br><br>
-
-  <button onclick="login()">Login</button>
+<div id="menu" style="display:none;">
+  <h3>Select</h3>
+  <button onclick="go('chat.html')">Public Chat</button>
+  <button onclick="go('room.html')">Private Chat</button>
+  <button onclick="go('love.html')">Love %</button>
+  <button onclick="go('quiz.html')">Love Quiz</button>
+  <button onclick="go('books.html')">Books</button>
 </div>
 
 <script>
-function login(){
-  const name = document.getElementById("name").value;
+function login() {
+  let u = user.value;
+  let p = pass.value;
 
-  if(name){
-    localStorage.setItem("user", name);
-    window.location.href = "/room.html";
-  } else {
-    alert("Enter name");
-  }
+  fetch(`/login?username=${u}&password=${p}`)
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        menu.style.display = "block";
+      } else {
+        alert("Wrong login");
+      }
+    });
+}
+
+function go(page) {
+  window.location = page;
 }
 </script>
 

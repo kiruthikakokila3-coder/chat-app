@@ -1,26 +1,32 @@
-<!DOCTYPE html>
-<html>
-<head>
-<title>Room</title>
-</head>
-<body style="text-align:center">
+<script src="/socket.io/socket.io.js"></script>
 
-<h2>Select Chat Type</h2>
+<h2>Private Chat</h2>
 
-<button onclick="goPublic()">🌍 Public</button>
-<button onclick="goPrivate()">🔒 Private</button>
+<input id="room" placeholder="room name">
+<button onclick="join()">Join</button>
+
+<input id="msg">
+<button onclick="send()">Send</button>
+
+<div id="chat"></div>
 
 <script>
-function goPublic(){
-  localStorage.setItem("room","public");
-  window.location.href = "/chat.html";
+const socket = io();
+let currentRoom = "";
+
+function join() {
+  currentRoom = room.value;
+  socket.emit("join private", currentRoom);
 }
 
-function goPrivate(){
-  localStorage.setItem("room","private");
-  window.location.href = "/chat.html";
+function send() {
+  socket.emit("private message", {
+    room: currentRoom,
+    msg: msg.value
+  });
 }
+
+socket.on("private message", (m) => {
+  chat.innerHTML += "<p>" + m + "</p>";
+});
 </script>
-
-</body>
-</html>

@@ -1,85 +1,19 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Love Quiz ❤️</title>
-  <style>
-    body{
-      background:#111;
-      color:white;
-      text-align:center;
-      font-family:Arial;
-    }
-    button{
-      padding:10px 20px;
-      margin:10px;
-      background:#ff4081;
-      border:none;
-      color:white;
-    }
-  </style>
-</head>
-<body>
+<h2>Love Calculator ❤️</h2>
 
-<h2>❤️ Love Quiz</h2>
+<input id="name1" placeholder="Your Name">
+<input id="name2" placeholder="Partner Name">
 
-<h3 id="question">Loading...</h3>
+<button onclick="calc()">Check</button>
 
-<button onclick="answer(1)">Yes ❤️</button>
-<button onclick="answer(0)">No 💔</button>
-
-<h2 id="result"></h2>
+<h3 id="result"></h3>
 
 <script>
+function calc() {
+  let n1 = name1.value;
+  let n2 = name2.value;
 
-// 💥 BIG QUESTION BANK (expand pannalaam)
-const questions = [
-"Do you think about them daily?",
-"Do you trust them completely?",
-"Do you miss them when offline?",
-"Do you smile seeing their message?",
-"Do you care about their feelings?",
-"Do you feel jealous sometimes?",
-"Do you want future with them?",
-"Do you share secrets?",
-"Do you respect them?",
-"Do you feel happy with them?",
-"Do you imagine life together?",
-"Do you feel safe with them?",
-"Do you prioritize them?",
-"Do you support them always?",
-"Do you forgive easily?",
-"Do you feel connected deeply?"
-];
+  let percent = Math.floor(Math.random() * 100);
 
-let score = 0;
-let count = 0;
-
-function nextQ(){
-  const q = questions[Math.floor(Math.random()*questions.length)];
-  document.getElementById("question").innerText = q;
+  result.innerText = `${n1} ❤️ ${n2} = ${percent}%`;
 }
-
-function answer(val){
-  score += val;
-  count++;
-
-  // 👉 infinity mode (no limit)
-  if(count < 10){
-    nextQ();
-  }else{
-    let percent = Math.floor((score/count)*100);
-
-    document.getElementById("question").innerText = "Finished 💖";
-    document.getElementById("result").innerText =
-      "Love Score: "+percent+"% ❤️";
-
-  }
-}
-
-// start
-nextQ();
-
 </script>
-
-</body>
-</html>

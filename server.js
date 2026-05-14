@@ -1,42 +1,49 @@
 const express = require("express");
+const http = require("http");
+const { Server } = require("socket.io");
+
 const app = express();
-const http = require("http").createServer(app);
-const io = require("socket.io")(http, {
-  cors: {
-    origin: "*"
-  }
-});
+const server = http.createServer(app);
+const io = new Server(server);
 
 app.use(express.static("public"));
 
-// default page
-app.get("/", (req, res) => {
-  res.sendFile(__dirname + "/public/index.html");
-});
+// Dummy login users
+const users = {
+  user1: "123",
+  user2: "123"
+};
 
-// socket connection
-let users = [];
+// LOGIN API
+app.get("/login", (req, res) => {
+  const { username, password } = req.query;
+
+  if (users[username] && users[username] === password) {
+    res.json({ success: true });
+  } else {
+    res.json({ success: false });
+  }
+});
 
 io.on("connection", (socket) => {
 
-  socket.on("join", (name) => {
-    users.push(name);
-    io.emit("online", users.length);
+  // PUBLIC CHAT
+  socket.on("public message", (msg) => {
+    io.emit("public message", msg);
   });
 
-  socket.on("message", (data) => {
-    io.emit("message", data);
+  // JOIN PRIVATE ROOM
+  socket.on("join private", (room) => {
+    socket.join(room);
   });
 
-  socket.on("disconnect", () => {
-    users.pop();
-    io.emit("online", users.length);
+  // PRIVATE CHAT
+  socket.on("private message", ({ room, msg }) => {
+    socket.to(room).emit("private message", msg);
   });
 
 });
 
-const PORT = process.env.PORT || 3000;
-
-http.listen(PORT, () => {
-  console.log("Server running on " + PORT);
+server.listen(3000, () => {
+  console.log("Server running on 3000");
 });
