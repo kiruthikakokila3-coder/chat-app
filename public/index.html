@@ -1,24 +1,33 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Login</title>
-<link rel="stylesheet" href="style.css">
+  <title>Login</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <div class="login-box">
   <h2>Login</h2>
 
-  <input id="name" placeholder="Enter name">
-  <input id="img" placeholder="Profile Image URL">
-
+  <input id="name" placeholder="Enter your name">
+  <br>
   <button onclick="login()">Enter</button>
 </div>
 
 <script>
 function login(){
-  localStorage.setItem("username", name.value);
-  localStorage.setItem("img", img.value);
+  const name = document.getElementById("name").value;
+
+  if(!name){
+    alert("Enter name");
+    return;
+  }
+
+  localStorage.setItem("username", name);
+
+  // default room
+  localStorage.setItem("room", "public");
+
   window.location = "chat.html";
 }
 </script>
