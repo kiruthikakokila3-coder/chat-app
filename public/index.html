@@ -1,32 +1,406 @@
+<!-- index.html -->
+
 <!DOCTYPE html>
 <html>
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0">
+
+<title>Room Chat</title>
+
+<script src="/socket.io/socket.io.js"></script>
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Arial;
+}
+
+body{
+background:#0b141a;
+height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+color:white;
+}
+
+.app{
+width:100%;
+max-width:420px;
+height:100vh;
+background:#111b21;
+display:flex;
+flex-direction:column;
+}
+
+.setup{
+padding:20px;
+display:flex;
+flex-direction:column;
+gap:12px;
+}
+
+.setup input,
+.setup select{
+height:45px;
+border:none;
+outline:none;
+padding:0 10px;
+border-radius:10px;
+background:#202c33;
+color:white;
+}
+
+.setup button{
+height:45px;
+border:none;
+border-radius:10px;
+background:#00a884;
+color:white;
+font-size:16px;
+cursor:pointer;
+}
+
+.chat{
+display:none;
+flex-direction:column;
+height:100%;
+}
+
+.top{
+background:#202c33;
+padding:15px;
+}
+
+.users{
+font-size:13px;
+margin-top:5px;
+color:#00d95f;
+}
+
+.typing{
+font-size:12px;
+color:orange;
+margin-top:3px;
+}
+
+.chat-box{
+flex:1;
+padding:15px;
+overflow-y:auto;
+}
+
+.msg{
+max-width:75%;
+padding:10px;
+margin-bottom:10px;
+border-radius:10px;
+word-wrap:break-word;
+}
+
+.sent{
+background:#005c4b;
+margin-left:auto;
+}
+
+.receive{
+background:#202c33;
+}
+
+.bottom{
+padding:10px;
+background:#202c33;
+display:flex;
+gap:10px;
+}
+
+.bottom input{
+flex:1;
+height:45px;
+border:none;
+outline:none;
+border-radius:25px;
+padding:0 15px;
+background:#2a3942;
+color:white;
+}
+
+.bottom button{
+width:50px;
+border:none;
+border-radius:50%;
+background:#00a884;
+color:white;
+font-size:18px;
+cursor:pointer;
+}
+
+</style>
+</head>
+
 <body>
 
-<h2>Login</h2>
+<div class="app">
 
-<input id="user" placeholder="username">
-<input id="pass" type="password" placeholder="password">
+<!-- SETUP -->
 
-<button onclick="login()">Login</button>
+<div class="setup" id="setup">
+
+<input type="text"
+id="userName"
+placeholder="Your Name">
+
+<input type="text"
+id="roomName"
+placeholder="Room Name">
+
+<input type="password"
+id="password"
+placeholder="Password">
+
+<select id="roomType">
+<option value="public">
+Public Room
+</option>
+
+<option value="private">
+Private Room (2 Users)
+</option>
+</select>
+
+<button onclick="createRoom()">
+Create Room
+</button>
+
+<button onclick="joinRoom()">
+Join Room
+</button>
+
+</div>
+
+<!-- CHAT -->
+
+<div class="chat" id="chat">
+
+<div class="top">
+
+<h3 id="roomTitle">
+Room
+</h3>
+
+<div class="users"
+id="roomUsers">
+0 Users
+</div>
+
+<div class="typing"
+id="typing">
+</div>
+
+</div>
+
+<div class="chat-box"
+id="chatBox">
+</div>
+
+<div class="bottom">
+
+<input type="text"
+id="messageInput"
+placeholder="Type message">
+
+<button onclick="sendMessage()">
+➤
+</button>
+
+</div>
+
+</div>
+
+</div>
 
 <script>
-async function login() {
-  const res = await fetch("/api/auth/login", {
-    method: "POST",
-    headers: {"Content-Type":"application/json"},
-    body: JSON.stringify({
-      username: user.value,
-      password: pass.value
-    })
-  });
 
-  const data = await res.json();
+const socket = io()
 
-  localStorage.setItem("token", data.token);
-  localStorage.setItem("user", data.username);
+const setup =
+document.getElementById("setup")
 
-  window.location = "chat.html";
+const chat =
+document.getElementById("chat")
+
+const roomTitle =
+document.getElementById("roomTitle")
+
+const roomUsers =
+document.getElementById("roomUsers")
+
+const typing =
+document.getElementById("typing")
+
+const chatBox =
+document.getElementById("chatBox")
+
+const messageInput =
+document.getElementById("messageInput")
+
+// CREATE ROOM
+
+function createRoom(){
+
+const data = {
+userName:
+document.getElementById("userName").value,
+
+roomName:
+document.getElementById("roomName").value,
+
+password:
+document.getElementById("password").value,
+
+type:
+document.getElementById("roomType").value
 }
+
+socket.emit("create room", data)
+
+}
+
+// JOIN ROOM
+
+function joinRoom(){
+
+const data = {
+userName:
+document.getElementById("userName").value,
+
+roomName:
+document.getElementById("roomName").value,
+
+password:
+document.getElementById("password").value
+}
+
+socket.emit("join room", data)
+
+}
+
+// ROOM JOINED
+
+socket.on("room joined",(room)=>{
+
+setup.style.display = "none"
+
+chat.style.display = "flex"
+
+roomTitle.innerText = room
+
+})
+
+// USERS
+
+socket.on("room users",(users)=>{
+
+roomUsers.innerText =
+users.length + " Users Online"
+
+})
+
+// SEND MESSAGE
+
+function sendMessage(){
+
+const msg = messageInput.value
+
+if(msg === "") return
+
+addMessage("You: " + msg,"sent")
+
+socket.emit("chat message",msg)
+
+messageInput.value = ""
+
+socket.emit("stop typing")
+
+}
+
+// RECEIVE
+
+socket.on("chat message",(data)=>{
+
+addMessage(
+data.name + ": " + data.message,
+"receive"
+)
+
+})
+
+// ADD MESSAGE
+
+function addMessage(text,type){
+
+const div =
+document.createElement("div")
+
+div.classList.add("msg")
+div.classList.add(type)
+
+div.innerText = text
+
+chatBox.appendChild(div)
+
+chatBox.scrollTop =
+chatBox.scrollHeight
+
+}
+
+// TYPING
+
+messageInput.addEventListener(
+"input",
+()=>{
+
+socket.emit("typing")
+
+clearTimeout(window.typingTimeout)
+
+window.typingTimeout =
+setTimeout(()=>{
+
+socket.emit("stop typing")
+
+},1000)
+
+}
+)
+
+socket.on("typing",(name)=>{
+
+typing.innerText =
+name + " typing..."
+
+})
+
+socket.on("stop typing",()=>{
+
+typing.innerText = ""
+
+})
+
+// ERROR
+
+socket.on("error message",(msg)=>{
+
+alert(msg)
+
+})
+
 </script>
 
 </body>
