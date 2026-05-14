@@ -1,61 +1,26 @@
 body {
-  margin: 0;
-  font-family: Arial;
-  background: #ece5dd;
-}
-
-h2 {
-  background: #075e54;
+  background: #0d0d0d;
   color: white;
-  padding: 15px;
-  margin: 0;
+  font-family: sans-serif;
+  text-align: center;
 }
 
 #messages {
-  height: 80vh;
-  overflow-y: auto;
+  height: 300px;
+  overflow-y: scroll;
+  border: 1px solid #333;
+  margin: 10px;
   padding: 10px;
-  display: flex;
-  flex-direction: column;
-}
-
-.message {
-  max-width: 60%;
-  padding: 10px;
-  margin: 5px;
-  border-radius: 10px;
-  font-size: 14px;
-}
-
-.me {
-  background: #dcf8c6;
-  margin-left: auto;
-}
-
-.other {
-  background: white;
-  margin-right: auto;
-}
-
-#bottom {
-  display: flex;
-  padding: 10px;
-  background: white;
 }
 
 input {
-  flex: 1;
   padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 20px;
+  width: 60%;
 }
 
 button {
-  padding: 10px 15px;
-  margin-left: 10px;
-  background: #075e54;
+  padding: 10px;
+  background: #ff0055;
   color: white;
   border: none;
-  border-radius: 50%;
-  cursor: pointer;
 }

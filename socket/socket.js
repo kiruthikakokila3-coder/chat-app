@@ -1,21 +1,53 @@
-module.exports = (io) => {
+module.exports = function (io) {
+
+  let onlineUsers = {};
+
   io.on("connection", (socket) => {
-    console.log("User connected");
 
-    socket.on("joinRoom", (room) => {
+    socket.on("join", (user) => {
+      onlineUsers[socket.id] = user;
+      io.emit("onlineUsers", Object.values(onlineUsers));
+    });
+
+    // PUBLIC
+    socket.on("joinPublic", (user) => {
+      socket.join("public");
+    });
+
+    socket.on("publicMessage", ({ user, msg }) => {
+      io.to("public").emit("message", {
+        user,
+        msg,
+        time: new Date().toLocaleTimeString()
+      });
+    });
+
+    // PRIVATE
+    socket.on("joinPrivate", ({ user, friend }) => {
+      const room = [user, friend].sort().join("-");
       socket.join(room);
+      socket.room = room;
     });
 
-    socket.on("sendMessage", (data) => {
-      io.to(data.room).emit("newMessage", data);
+    socket.on("privateMessage", ({ user, friend, msg }) => {
+      const room = [user, friend].sort().join("-");
+      io.to(room).emit("message", {
+        user,
+        msg,
+        time: new Date().toLocaleTimeString()
+      });
     });
 
-    socket.on("typing", (room) => {
-      socket.to(room).emit("typing");
+    // TYPING
+    socket.on("typing", (user) => {
+      socket.broadcast.emit("typing", user + " typing...");
     });
 
     socket.on("disconnect", () => {
-      console.log("User disconnected");
+      delete onlineUsers[socket.id];
+      io.emit("onlineUsers", Object.values(onlineUsers));
     });
+
   });
+
 };
