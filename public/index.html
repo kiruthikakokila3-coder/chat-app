@@ -1,16 +1,56 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Login</title>
-<link rel="stylesheet" href="style.css">
+<title>Love Chat Login</title>
+<style>
+body{
+  background: linear-gradient(to right, #ff758c, #ff7eb3);
+  text-align:center;
+  font-family:sans-serif;
+  color:white;
+}
+
+.container{
+  margin-top:100px;
+}
+
+input{
+  padding:10px;
+  border:none;
+  border-radius:20px;
+  width:200px;
+}
+
+button{
+  padding:10px 20px;
+  border:none;
+  border-radius:20px;
+  background:red;
+  color:white;
+  cursor:pointer;
+}
+
+.heart{
+  font-size:50px;
+  animation: beat 1s infinite;
+}
+
+@keyframes beat{
+  0%{transform:scale(1);}
+  50%{transform:scale(1.2);}
+  100%{transform:scale(1);}
+}
+</style>
 </head>
+
 <body>
 
-<div class="box">
-  <h2>Login</h2>
+<div class="container">
+  <div class="heart">❤️</div>
+  <h1>Love Chat</h1>
 
-  <input id="name" placeholder="Name"><br>
-  <input id="pass" type="password" placeholder="Password"><br>
+  <input id="name" placeholder="Enter your name">
+  <br><br>
 
   <button onclick="login()">Login</button>
 </div>
@@ -19,11 +59,12 @@
 function login(){
   const name = document.getElementById("name").value;
 
-  if(!name) return alert("Enter name");
-
-  localStorage.setItem("username", name);
-
-  window.location = "room.html";
+  if(name){
+    localStorage.setItem("user", name);
+    window.location.href = "/room.html";
+  } else {
+    alert("Enter name");
+  }
 }
 </script>
 
