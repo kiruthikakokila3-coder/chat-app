@@ -1,40 +1,30 @@
-const socket = io();
+// ❤️ Floating hearts
+const heartsContainer = document.getElementById("hearts");
 
-const user = localStorage.getItem("username");
+function createHeart() {
+    const heart = document.createElement("div");
+    heart.classList.add("heart");
+    heart.innerHTML = "💖";
 
-socket.emit("join", user);
+    heart.style.left = Math.random() * 100 + "vw";
+    heart.style.fontSize = (Math.random() * 20 + 10) + "px";
+    heart.style.animationDuration = (Math.random() * 3 + 3) + "s";
 
-// send msg
-function send(){
-  const msg = document.getElementById("msg").value;
+    heartsContainer.appendChild(heart);
 
-  socket.emit("msg", {
-    user,
-    text: msg
-  });
+    setTimeout(() => {
+        heart.remove();
+    }, 5000);
 }
 
-// receive msg
-socket.on("msg", (data)=>{
-  const box = document.getElementById("chat-box");
+setInterval(createHeart, 300);
 
-  const div = document.createElement("div");
-  div.innerHTML = `<b>${data.user}</b>: ${data.text} ✔✔`;
-
-  box.appendChild(div);
-});
-
-// typing
-function typing(){
-  socket.emit("typing", user);
+// 🔐 Login
+function login() {
+    alert("Login Success 💖");
 }
 
-socket.on("typing", (data)=>{
-  document.getElementById("status").innerText = data;
-});
-
-// online
-socket.on("online", (count)=>{
-  document.getElementById("online").innerText =
-  "🟢 "+count+" online";
-});
+// 🔗 Navigation
+function go(page) {
+    window.location.href = page;
+}

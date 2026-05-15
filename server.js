@@ -1,49 +1,50 @@
 const express = require("express");
-const http = require("http");
-const { Server } = require("socket.io");
-
 const app = express();
-const server = http.createServer(app);
-const io = new Server(server);
+const http = require("http").createServer(app);
+const io = require("socket.io")(http);
+const multer = require("multer");
 
 app.use(express.static("public"));
+app.use("/uploads", express.static("uploads"));
 
-let users = {}; // dynamic users
-
-// LOGIN
-app.get("/login", (req, res) => {
-  const { username, password } = req.query;
-
-  if (!users[username]) {
-    users[username] = password;
-    return res.json({ success: true });
-  }
-
-  if (users[username] === password) {
-    res.json({ success: true });
-  } else {
-    res.json({ success: false });
+const storage = multer.diskStorage({
+  destination: "uploads/",
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + "-" + file.originalname);
   }
 });
+const upload = multer({ storage });
+
+app.post("/upload", upload.single("file"), (req, res) => {
+  res.json({ file: req.file.filename });
+});
+
+let users = {};
 
 io.on("connection", (socket) => {
 
-  // PUBLIC CHAT
-  socket.on("public", (msg) => {
-    io.emit("public", msg);
+  socket.on("join", (name) => {
+    users[socket.id] = name;
+    io.emit("online", Object.values(users));
   });
 
-  // JOIN ROOM
-  socket.on("join", (room) => {
-    socket.join(room);
+  socket.on("msg", (msg) => {
+    io.emit("msg", { user: users[socket.id], text: msg });
   });
 
-  // PRIVATE CHAT
-  socket.on("private", ({ room, msg }) => {
-    socket.to(room).emit("private", msg);
+  socket.on("typing", () => {
+    socket.broadcast.emit("typing", users[socket.id] + " typing...");
+  });
+
+  socket.on("file", (file) => {
+    io.emit("file", { user: users[socket.id], file });
+  });
+
+  socket.on("disconnect", () => {
+    delete users[socket.id];
+    io.emit("online", Object.values(users));
   });
 
 });
 
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log("Running on " + PORT));
+http.listen(3000, () => console.log("🔥 running"));

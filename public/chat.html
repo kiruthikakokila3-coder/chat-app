@@ -1,29 +1,46 @@
-<script src="/socket.io/socket.io.js"></script>
 <link rel="stylesheet" href="style.css">
-
-<h2>Public Chat</h2>
+<div class="container">
+<div id="chat"></div>
 
 <input id="msg">
 <button onclick="send()">Send</button>
 
-<div id="chat"></div>
+<form id="f">
+<input type="file" name="file">
+<button>File</button>
+</form>
 
+<p id="typing"></p>
+<p id="users"></p>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
 <script>
-const socket = io();
+const s=io();
+const u=localStorage.getItem("user");
+s.emit("join",u);
 
 function send(){
- add(msg.value,true);
- socket.emit("public", msg.value);
+ s.emit("msg",msg.value);
 }
 
-socket.on("public",(m)=>{
- add(m,false);
+msg.oninput=()=>s.emit("typing");
+
+s.on("msg",d=>chat.innerHTML+=`<p>${d.user}: ${d.text}</p>`);
+
+s.on("typing",t=>typing.innerText=t);
+
+s.on("online",l=>users.innerText=l.join(","));
+
+f.onsubmit=async(e)=>{
+ e.preventDefault();
+ let fd=new FormData(f);
+ let r=await fetch("/upload",{method:"POST",body:fd});
+ let d=await r.json();
+ s.emit("file",d.file);
+};
+
+s.on("file",d=>{
+ chat.innerHTML+=`<p>${d.user}: <a href="/uploads/${d.file}">file</a></p>`;
 });
-
-function add(m,me){
- let d=document.createElement("div");
- d.className="msg "+(me?"right":"left");
- d.innerText=m;
- chat.appendChild(d);
-}
 </script>
