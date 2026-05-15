@@ -3,27 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shree Chat App</title>
+    <title>Shree's Private Portal</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div id="login-screen" class="box">
-        <h2>Shree's Portal</h2>
+        <h2>Welcome to Shree Portal</h2>
         <input type="text" id="username" placeholder="Enter Your Name" required>
         <select id="chat-mode">
-            <option value="public">Public (Infinity Mode)</option>
-            <option value="private">Private (2 Member Mode)</option>
+            <option value="public">Public (Left Message)</option>
+            <option value="private">Private (Right Message)</option>
         </select>
-        <input type="password" id="password" placeholder="Password (for Private)">
-        <button onclick="startChat()">Enter Chat</button>
+        <input type="password" id="password" placeholder="Room Password (Same for Friends)" required>
+        <button onclick="startChat()">Enter Portal</button>
     </div>
 
     <div id="chat-dashboard" style="display:none;">
         <div class="header">
-            <span id="user-display"></span>
+            <div>
+                <span id="user-display"></span>
+                <span class="online-dot"></span>
+            </div>
             <button onclick="location.reload()" class="exit-btn">Exit</button>
         </div>
+        
+        <div class="books-nav">
+            <a href="https://anyflip.com/explore?q=kids" target="_blank">👶 Kids</a>
+            <a href="https://anyflip.com/explore?q=anime" target="_blank">🏮 Anime</a>
+            <a href="https://anyflip.com/explore?q=horror" target="_blank">👻 Horror</a>
+        </div>
+
         <div id="message-container" class="chat-area"></div>
+        
         <div class="input-area">
             <input type="text" id="msg-input" placeholder="Type a message...">
             <button onclick="sendMsg()">Send</button>
