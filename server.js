@@ -7,22 +7,25 @@ const path = require('path');
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'chat.html'));
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 io.on('connection', (socket) => {
+
     socket.on('join', (data) => {
         socket.userName = data.name;
-        // Password thaan Room ID. Ore password poduravanga ore room-ku povaanga.
-        socket.room = data.password; 
+
+        // ✅ FIX: trim password (MAIN BUG FIX)
+        socket.room = data.password.trim();
+
         socket.mode = data.mode;
 
         socket.join(socket.room);
+
         console.log(`${socket.userName} joined room: ${socket.room}`);
     });
 
     socket.on('chatMessage', (msg) => {
-        // Intha room-la irukura ellarkum message anuppum
         io.to(socket.room).emit('messageDisplay', {
             user: socket.userName,
             text: msg,
@@ -35,5 +38,5 @@ io.on('connection', (socket) => {
     });
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 10000;
 http.listen(PORT, () => console.log(`Server running on port ${PORT}`));

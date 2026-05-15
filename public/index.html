@@ -3,116 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shree's Flipbook Portal</title>
-    <style>
-        :root {
-            --primary: #6366f1;
-            --secondary: #ec4899;
-            --bg: #f3f4f6;
-        }
-
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-
-        /* Login & Settings Styles */
-        .box { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 350px; text-align: center; }
-        input, select { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
-        .btn { background: var(--primary); color: white; border: none; padding: 12px; width: 100%; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        
-        /* Chat Dashboard */
-        #dashboard { display: none; width: 90%; max-width: 800px; background: white; border-radius: 15px; overflow: hidden; height: 80vh; flex-direction: column; }
-        .chat-header { background: var(--primary); color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
-        .status { font-size: 0.8rem; background: #22c55e; padding: 2px 8px; border-radius: 10px; }
-        
-        .chat-area { flex-grow: 1; padding: 20px; overflow-y: auto; background: #f9fafb; display: flex; flex-direction: column; }
-        
-        /* Message Bubbles Logic */
-        .msg { margin-bottom: 15px; padding: 10px 15px; border-radius: 15px; max-width: 70%; }
-        .left-to-right { align-self: flex-start; background: #e5e7eb; border-bottom-left-radius: 2px; }
-        .right-to-left { align-self: flex-end; background: var(--secondary); color: white; border-bottom-right-radius: 2px; }
-
-        .chat-input { display: flex; padding: 15px; border-top: 1px solid #ddd; }
-        .chat-input input { margin: 0 10px 0 0; }
-        .exit-btn { background: #ef4444; padding: 5px 10px; color: white; border-radius: 5px; text-decoration: none; font-size: 0.8rem; }
-    </style>
+    <title>Shree's Private Portal</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <!-- Step 1 & 2: Login & Privacy Settings -->
-    <div id="loginBox" class="box">
-        <h2 id="welcomeMsg">Welcome!</h2>
-        <input type="text" id="userName" placeholder="Enter Your Name">
-        <select id="privacyMode">
-            <option value="public">Public (Infinity Members)</option>
-            <option value="private">Private (2 Members Only)</option>
-        </select>
-        <input type="password" id="pass" placeholder="Enter Password">
-        <button class="btn" onclick="startPortal()">Enter Portal</button>
+<div id="login-screen" class="box">
+    <h2>Welcome to Shree Portal</h2>
+
+    <input type="text" id="username" placeholder="Enter Your Name" required>
+
+    <select id="chat-mode">
+        <option value="public">Public</option>
+        <option value="private">Private</option>
+    </select>
+
+    <input type="password" id="password" placeholder="Room Password" required>
+
+    <button onclick="startChat()">Enter Portal</button>
+</div>
+
+<div id="chat-dashboard" style="display:none;">
+    
+    <div class="header">
+        <span id="user-display"></span>
+        <button onclick="location.reload()">Exit</button>
     </div>
 
-    <!-- Step 3: Dashboard & Chat -->
-    <div id="dashboard">
-        <div class="chat-header">
-            <div>
-                <span id="displayUser">User</span> 
-                <span class="status">Online</span>
-            </div>
-            <div id="modeDisplay" style="font-weight: bold;"></div>
-            <a href="#" class="exit-btn" onclick="location.reload()">Exit</a>
-        </div>
-        
-        <div class="chat-area" id="chatArea">
-            <!-- Messages will appear here -->
-        </div>
-
-        <div class="chat-input">
-            <input type="text" id="msgInput" placeholder="Type a message...">
-            <button class="btn" style="width: 80px;" onclick="sendMessage()">Send</button>
-        </div>
+    <!-- ✅ Books option (UNCHANGED) -->
+    <div class="books-nav">
+        <a href="https://anyflip.com/explore?q=kids" target="_blank">👶 Kids</a>
+        <a href="https://anyflip.com/explore?q=anime" target="_blank">🏮 Anime</a>
+        <a href="https://anyflip.com/explore?q=horror" target="_blank">👻 Horror</a>
     </div>
 
-    <script>
-        let currentUser = "";
-        let mode = "";
+    <div id="message-container"></div>
 
-        function startPortal() {
-            currentUser = document.getElementById('userName').value;
-            mode = document.getElementById('privacyMode').value;
-            let password = document.getElementById('pass').value;
+    <input type="text" id="msg-input" placeholder="Type message">
+    <button onclick="sendMsg()">Send</button>
 
-            if(currentUser === "" || password === "") {
-                alert("Please fill all details!");
-                return;
-            }
+</div>
 
-            document.getElementById('loginBox').style.display = 'none';
-            document.getElementById('dashboard').style.display = 'flex';
-            document.getElementById('displayUser').innerText = currentUser;
-            document.getElementById('modeDisplay').innerText = mode.toUpperCase();
+<script src="/socket.io/socket.io.js"></script>
+<script src="socket.js"></script>
 
-            // Initial Welcome Message
-            addMessage("System", `Welcome to ${mode} chat, ${currentUser}!`, 'left-to-right');
-        }
-
-        function sendMessage() {
-            let text = document.getElementById('msgInput').value;
-            if(text === "") return;
-
-            // Logic for Message Direction
-            // Public: Left to Right | Private: Right to Left
-            let direction = (mode === 'public') ? 'left-to-right' : 'right-to-left';
-            
-            addMessage(currentUser, text, direction);
-            document.getElementById('msgInput').value = "";
-        }
-
-        function addMessage(user, text, side) {
-            let chatArea = document.getElementById('chatArea');
-            let div = document.createElement('div');
-            div.className = `msg ${side}`;
-            div.innerHTML = `<strong>${user}:</strong> <br> ${text}`;
-            chatArea.appendChild(div);
-            chatArea.scrollTop = chatArea.scrollHeight;
-        }
-    </script>
 </body>
 </html>
