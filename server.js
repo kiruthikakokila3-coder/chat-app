@@ -1,50 +1,26 @@
-const express = require("express");
+const express = require('express');
 const app = express();
-const http = require("http").createServer(app);
-const io = require("socket.io")(http);
-const multer = require("multer");
+const http = require('http').createServer(app);
+const io = require('socket.io')(http);
 
-app.use(express.static("public"));
-app.use("/uploads", express.static("uploads"));
+app.use(express.static(__dirname));
 
-const storage = multer.diskStorage({
-  destination: "uploads/",
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + "-" + file.originalname);
-  }
-});
-const upload = multer({ storage });
+io.on('connection', (socket) => {
+    socket.on('join', (data) => {
+        socket.userName = data.name;
+        socket.mode = data.mode;
+        console.log(`${socket.userName} joined in ${socket.mode} mode`);
+    });
 
-app.post("/upload", upload.single("file"), (req, res) => {
-  res.json({ file: req.file.filename });
-});
-
-let users = {};
-
-io.on("connection", (socket) => {
-
-  socket.on("join", (name) => {
-    users[socket.id] = name;
-    io.emit("online", Object.values(users));
-  });
-
-  socket.on("msg", (msg) => {
-    io.emit("msg", { user: users[socket.id], text: msg });
-  });
-
-  socket.on("typing", () => {
-    socket.broadcast.emit("typing", users[socket.id] + " typing...");
-  });
-
-  socket.on("file", (file) => {
-    io.emit("file", { user: users[socket.id], file });
-  });
-
-  socket.on("disconnect", () => {
-    delete users[socket.id];
-    io.emit("online", Object.values(users));
-  });
-
+    socket.on('chatMessage', (msg) => {
+        // Public na ellarkum pogum, Private na selective-aa handle pannalam
+        io.emit('messageDisplay', {
+            user: socket.userName,
+            text: msg,
+            mode: socket.mode
+        });
+    });
 });
 
-http.listen(3000, () => console.log("🔥 running"));
+const PORT = process.env.PORT || 3000;
+http.listen(PORT, () => console.log(`Server running on port ${PORT}`));
