@@ -1,24 +1,32 @@
 <!DOCTYPE html>
-<html>
+<html lang="ta">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shree Chat App</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="login" class="box">
-        <h2>Welcome to Shree Chat</h2>
-        <input type="text" id="name" placeholder="Enter Name">
-        <select id="mode">
-            <option value="public">Public (Infinity)</option>
-            <option value="private">Private (2 Member)</option>
+    <div id="login-screen" class="box">
+        <h2>Shree's Portal</h2>
+        <input type="text" id="username" placeholder="Enter Your Name" required>
+        <select id="chat-mode">
+            <option value="public">Public (Infinity Mode)</option>
+            <option value="private">Private (2 Member Mode)</option>
         </select>
-        <button onclick="connect()">Login</button>
+        <input type="password" id="password" placeholder="Password (for Private)">
+        <button onclick="startChat()">Enter Chat</button>
     </div>
 
-    <div id="chat-container">
-        <div class="chat-area" id="msgBox"></div>
-        <div style="display:flex; padding:10px;">
-            <input type="text" id="m" style="flex:1">
-            <button onclick="send()">Send</button>
+    <div id="chat-dashboard" style="display:none;">
+        <div class="header">
+            <span id="user-display"></span>
+            <button onclick="location.reload()" class="exit-btn">Exit</button>
+        </div>
+        <div id="message-container" class="chat-area"></div>
+        <div class="input-area">
+            <input type="text" id="msg-input" placeholder="Type a message...">
+            <button onclick="sendMsg()">Send</button>
         </div>
     </div>
 
