@@ -1,52 +1,37 @@
 const express = require("express");
 const http = require("http");
-const { Server } = require("socket.io");
+const socketIo = require("socket.io");
 const path = require("path");
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server);
+const io = socketIo(server);
 
-// ✅ Serve static files (public folder)
+// ✅ FIXED PUBLIC PATH
 app.use(express.static(path.join(__dirname, "../public")));
 
-// ✅ FIX: root route
+// ✅ HOME ROUTE
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "../public/index.html"));
 });
 
-// ✅ Users storage
-let users = {};
-
-// ✅ Socket connection
+// 💬 SOCKET.IO CHAT
 io.on("connection", (socket) => {
-  console.log("User connected:", socket.id);
+  console.log("User connected");
 
-  // Join
-  socket.on("join", (username) => {
-    users[socket.id] = username;
-    io.emit("message", `${username} joined the chat`);
+  // Receive message
+  socket.on("chat message", (msg) => {
+    io.emit("chat message", msg);
   });
 
-  // Message
-  socket.on("chatMessage", (msg) => {
-    const username = users[socket.id];
-    io.emit("message", `${username}: ${msg}`);
-  });
-
-  // Disconnect
   socket.on("disconnect", () => {
-    const username = users[socket.id];
-    if (username) {
-      io.emit("message", `${username} left the chat`);
-      delete users[socket.id];
-    }
+    console.log("User disconnected");
   });
 });
 
-// ✅ Render PORT fix
-const PORT = process.env.PORT || 3000;
+// 🚀 SERVER START
+const PORT = process.env.PORT || 10000;
 
 server.listen(PORT, () => {
-  console.log("🔥 Server running on port " + PORT);
+  console.log(`Server running on port ${PORT}`);
 });
