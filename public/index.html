@@ -1,33 +1,26 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Chat App</title>
+  <title>VibeChat Login</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>Chat Working 🔥</h1>
 
-  <input id="msg" placeholder="Type message">
-  <button onclick="send()">Send</button>
+<div class="center">
+  <h1>VibeChat 🔥</h1>
+  <input id="name" placeholder="Enter your name">
+  <button onclick="login()">Enter</button>
+</div>
 
-  <ul id="chat"></ul>
+<script>
+function login() {
+  const name = document.getElementById("name").value;
+  if(!name) return alert("Enter name");
 
-  <script src="/socket.io/socket.io.js"></script>
-  <script>
-    const socket = io();
+  localStorage.setItem("username", name);
+  window.location.href = "story.html";
+}
+</script>
 
-    const username = prompt("Enter your name:");
-    socket.emit("join", username);
-
-    socket.on("message", (msg) => {
-      const li = document.createElement("li");
-      li.innerText = msg;
-      document.getElementById("chat").appendChild(li);
-    });
-
-    function send() {
-      const msg = document.getElementById("msg").value;
-      socket.emit("chatMessage", msg);
-    }
-  </script>
 </body>
 </html>

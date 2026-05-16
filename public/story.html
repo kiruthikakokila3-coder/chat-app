@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Stories</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h2>Stories 📸</h2>
+
+<input id="storyInput" placeholder="Write story...">
+<button onclick="addStory()">Post</button>
+
+<ul id="stories"></ul>
+
+<button onclick="goChat()">Go Chat 💬</button>
+
+<script>
+let stories = [];
+
+function addStory() {
+  const text = document.getElementById("storyInput").value;
+  if(!text) return;
+
+  stories.push(text);
+  render();
+}
+
+function render() {
+  const ul = document.getElementById("stories");
+  ul.innerHTML = "";
+  stories.forEach(s => {
+    const li = document.createElement("li");
+    li.textContent = s;
+    ul.appendChild(li);
+  });
+}
+
+function goChat() {
+  window.location.href = "chat.html";
+}
+</script>
+
+</body>
+</html>
