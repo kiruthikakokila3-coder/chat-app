@@ -7,10 +7,15 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-// ✅ Serve frontend (public folder)
+// ✅ Serve static files (public folder)
 app.use(express.static(path.join(__dirname, "../public")));
 
-// ✅ Store users
+// ✅ FIX: root route
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "../public/index.html"));
+});
+
+// ✅ Users storage
 let users = {};
 
 // ✅ Socket connection
@@ -39,7 +44,7 @@ io.on("connection", (socket) => {
   });
 });
 
-// ✅ IMPORTANT (Render fix)
+// ✅ Render PORT fix
 const PORT = process.env.PORT || 3000;
 
 server.listen(PORT, () => {
