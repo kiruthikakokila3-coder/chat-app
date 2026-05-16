@@ -5,10 +5,10 @@ const cors = require("cors");
 const http = require("http");
 const { Server } = require("socket.io");
 
-const connectDB = require("./config/db");
-const authRoutes = require("./routes/authRoutes");
-const roomRoutes = require("./routes/roomRoutes");
-const socketHandler = require("./socket/socket");
+const connectDB = require("./public/config/db");
+const authRoutes = require("./public/routes/authRoutes");
+const roomRoutes = require("./public/routes/roomRoutes");
+const socketHandler = require("./public/socket/socket");
 
 connectDB();
 
